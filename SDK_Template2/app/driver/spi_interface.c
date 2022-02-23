@@ -190,9 +190,14 @@ void ICACHE_FLASH_ATTR SPIMasterCfgCmd(SpiNum spiNum, uint32_t cmd)
 
     // SPI_USER2 bit28-31 is cmd length,cmd bit length is value(0-15)+1,
     // bit15-0 is cmd value.
+    //reg,bit_map,value,shift
     SET_PERI_REG_BITS(SPI_USER2(spiNum), SPI_USR_COMMAND_VALUE, cmd, SPI_USR_COMMAND_VALUE_S);
 }
 
+int32_t ICACHE_FLASH_ATTR SPIMasterSendByte(u8 pInData)
+{
+    SET_PERI_REG_BITS(SPI_USER2(1), SPI_USR_COMMAND_VALUE, pInData, SPI_USR_COMMAND_VALUE_S);
+}
 /**
  * @brief Send data to slave.
  *

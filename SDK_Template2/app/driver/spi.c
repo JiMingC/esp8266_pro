@@ -109,11 +109,11 @@ spi_lcd_9bit_write(uint8_t spi_no, uint8_t high_bit, uint8_t low_8bit)
 void ICACHE_FLASH_ATTR
 spi_mast_byte_write(uint8_t spi_no, uint8_t data)
 {
-    uint32_t regvalue;
-
-    if (spi_no > 1) {
-        return;    //handle invalid input number
-    }
+//    uint32_t regvalue;
+//
+//    if (spi_no > 1) {
+//        return;    //handle invalid input number
+//    }
 
     while (READ_PERI_REG(SPI_CMD(spi_no))&SPI_USR);
 

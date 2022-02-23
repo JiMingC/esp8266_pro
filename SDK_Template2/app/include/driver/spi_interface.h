@@ -336,6 +336,9 @@ void SPIIntDisable(SpiNum spiNum, SpiIntSrc intSrc);
  */
 void SPIIntClear(SpiNum spiNum);
 
+
+int32_t SPIMasterSendByte(u8 pInData);
+
 #ifdef __cplusplus
 }
 #endif
