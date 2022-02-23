@@ -35,6 +35,8 @@
 
 #include "user_sntp.h"
 #include "user_TcpServer.h"
+#include "user_lcd.h"
+#include "spi_test.h"
 
 
 #define DEVICE_TYPE 		"gh_9e2cff3dfa51" //wechat public number
@@ -97,6 +99,7 @@ static const partition_item_t at_partition_table[] = {
 
 LOCAL struct station_config s_staconf;
 LOCAL os_timer_t user_timer;			//for wifi connect and sntp
+LOCAL os_timer_t user_loop_timer;		//for main loop
 LOCAL os_timer_t send_data_timer;     	//for tcp/udp data send
 
 
@@ -335,6 +338,26 @@ user_scan_done(void *arg, STATUS status) {
 	}
 }
 
+void ICACHE_FLASH_ATTR user_pre_init(void)
+{
+    if(!system_partition_table_regist(at_partition_table, sizeof(at_partition_table)/sizeof(at_partition_table[0]),SPI_FLASH_SIZE_MAP)) {
+		os_printf("system_partition_table_regist fail\r\n");
+		while(1);
+
+	}
+}
+LOCAL u16 color_rand;
+void ICACHE_FLASH_ATTR
+Main_loop() {
+//	 LCD_Clear(color_rand);
+//	 color_rand += 0xF;
+	 //LCD_ShowString(LCD_W/2 - 10, LCD_H/2 - 10 ,"hello kogwejun");
+	 //LCD_DrawRectangle(0, 0, 60, 120);
+	 //LCD_ShowChar(10, 10, ' ',0);
+	 //LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+	 os_printf("test %x\n", color_rand);
+}
+
 //wifi Para data exist, sacn the ap
 void ICACHE_FLASH_ATTR
 user_scan(void)
@@ -343,16 +366,6 @@ user_scan(void)
    os_memset(&config, 0, sizeof(config));
    config.ssid = s_staconf.ssid;
    wifi_station_scan(&config, user_scan_done);
-}
-
-
-void ICACHE_FLASH_ATTR user_pre_init(void)
-{
-    if(!system_partition_table_regist(at_partition_table, sizeof(at_partition_table)/sizeof(at_partition_table[0]),SPI_FLASH_SIZE_MAP)) {
-		os_printf("system_partition_table_regist fail\r\n");
-		while(1);
-
-	}
 }
 
 void ICACHE_FLASH_ATTR
@@ -379,4 +392,16 @@ user_init(void)
     }
 
     SNTP_Init();
+    Lcd_Init();
+    LCD_Clear(BLACK);
+    LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+    showimage();
+    //spi_interface_test();
+//    LCD_fillScreen(BLUE);
+    //LCD_Clear(WHITE);
+    //spi_master_init(1);
+
+	os_timer_disarm(&user_loop_timer);
+	os_timer_setfn(&user_loop_timer, (os_timer_func_t *) Main_loop,NULL);
+	os_timer_arm(&user_loop_timer, 1000, true);
 }
