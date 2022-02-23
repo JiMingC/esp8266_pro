@@ -1,0 +1,5 @@
+SDK_Template2/bin
+SDK_Template2/tools
+SDK_Template2/app/user/.output/
+SDK_Template2/app/driver/.output/
+.output/
