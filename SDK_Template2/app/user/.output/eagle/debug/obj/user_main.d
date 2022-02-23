@@ -24,4 +24,8 @@
  ../../include/queue.h ../../include/spi_flash.h ../../include/gpio.h \
  ../../include/smartconfig.h ../../include/airkiss.h \
  ../include/user_sntp.h ../include/user_TcpServer.h \
- ../../include/os_type.h
+ ../../include/os_type.h ../include/user_lcd.h \
+ ../include/driver/spi_interface.h ../include/driver/spi_register.h \
+ ../include/driver/spi.h ../include/driver/spi_register.h \
+ ../include/driver/uart.h ../../include/spi_flash.h ../../include/gpio.h \
+ ../include/spi_test.h

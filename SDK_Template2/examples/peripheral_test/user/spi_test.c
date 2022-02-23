@@ -178,7 +178,7 @@ void ICACHE_FLASH_ATTR spi_master_test()
 
 
 //  Test others slave.Communication format:0bytes command + 0 bytes address + x bytes Data
-#if 0
+#if 1
     os_printf("\r\n Master send 4 bytes data to slave\r\n");
     os_memset(sendData, 0, sizeof(sendData));
     sendData[0] = 0x2D3E4F50;
