@@ -33,6 +33,7 @@
 #include "smartconfig.h"
 #include "airkiss.h"
 
+#include "user_display.h"
 #include "user_sntp.h"
 #include "user_TcpServer.h"
 #include "user_lcd.h"
@@ -104,6 +105,9 @@ LOCAL os_timer_t send_data_timer;     	//for tcp/udp data send
 
 
 LOCAL struct ip_info user_ip;
+
+LOCAL SntpData_t sntpdata;
+LOCAL u8 sntpTupdate;
 
 #if   TCP_CLIENT
 struct espconn tcp_client;
@@ -270,6 +274,7 @@ smartconfig_done(sc_status status, void *pdata)
                 uint8 phone_ip[4] = {0};
                 os_memcpy(phone_ip, (uint8*)pdata, 4);
                 os_printf("Phone ip: %d.%d.%d.%d\n",phone_ip[0],phone_ip[1],phone_ip[2],phone_ip[3]);
+                system_restart();
             } else {
             	//SC_TYPE_AIRKISS - support airkiss v2.0
 #if U_SC_TYPE == U_SC_TYPE_AIRKISS
@@ -282,6 +287,27 @@ smartconfig_done(sc_status status, void *pdata)
 
 }
 
+void ICACHE_FLASH_ATTR
+sntp_read_timer_callback2(void *arg)
+{
+	uint32_t time = sntp_get_current_timestamp();
+	uint8 time1[25];
+	os_sprintf(time1, "%s", sntp_get_real_time(time));
+
+	SntpData_t T_sntpdata;
+	sntpTimeChangeToSimpleDateFormat(time1, &T_sntpdata, time);
+	sntpTupdate = SntpdataUpadte(&sntpdata, T_sntpdata);
+//	sntpdata.hour = T_sntpdata.hour;
+//	sntpdata.minute = T_sntpdata.minute;
+//	sntpdata.second = T_sntpdata.second;
+//	DisplayTime(sntpTupdate, sntpdata);
+//
+//	os_printf("time:%d\r\n",time);
+//	DisplayTime(sntpTupdate, &sntpdata);
+//	os_printf("date:%s\r\n",sntp_get_real_time(time));
+//	os_printf("date:%s\r\n", sntpTimeChangeToSimpleDateFormat(time1), &sntpdata));
+}
+
 void ICACHE_FLASH_ATTR wifi_check(void *arg){
 	static uint8 count=0;
 	uint8 status;
@@ -290,8 +316,9 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 	status = wifi_station_get_connect_status(); //
 	if(status == STATION_GOT_IP){ //
 		os_printf("wi_fi connect.\r\n");
-		os_timer_setfn(&user_timer, sntp_read_timer_callback, NULL);
-		os_timer_arm(&user_timer, 5000, 1);
+		os_timer_disarm(&user_timer);
+		os_timer_setfn(&user_timer, sntp_read_timer_callback2, NULL);
+		os_timer_arm(&user_timer, 1000, 1);
 		wifi_get_ip_info(STATION_IF,&user_ip);		//while connect success, get ip info
 #if   TCP_CLIENT
 		tcp_client_init(&tcp_client,TCP_SERVER_IP, &user_ip.ip,TCP_SERVER_PORT);
@@ -311,8 +338,10 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 #endif
 		return;
 	}else{
+		os_printf("wi_fi connect[%d].\r\n", count);
 		if(count > 7){ //
 			os_printf("wi_fi connect fail.\r\n");
+			smartconfig_start(smartconfig_done);
 			return;
 		}
 	}
@@ -326,15 +355,18 @@ user_scan_done(void *arg, STATUS status) {
 
         wifi_station_set_config(&s_staconf);
         wifi_station_disconnect();
-        wifi_station_connect();
-        //
-
-        os_timer_disarm(&user_timer);
-        os_timer_setfn(&user_timer, wifi_check, NULL);
-        os_timer_arm(&user_timer, 2000, 0);
+        if (wifi_station_connect()) {
+			os_printf("SCAN_STATUS_connect SUCCESS\n");
+			os_timer_disarm(&user_timer);
+			os_timer_setfn(&user_timer, wifi_check, NULL);
+			os_timer_arm(&user_timer, 2000, 0);
+        } else {
+			os_printf("SCAN_STATUS_CONNECT FAIL\n");
+			smartconfig_start(smartconfig_done);
+        }
 	} else {
-        os_printf("connect time out, start smart_cfg\n");
-        smartconfig_start(smartconfig_done);
+		os_printf("connect time out, start smart_cfg\n");
+		smartconfig_start(smartconfig_done);
 	}
 }
 
@@ -349,13 +381,14 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
 LOCAL u16 color_rand;
 void ICACHE_FLASH_ATTR
 Main_loop() {
-//	 LCD_Clear(color_rand);
-//	 color_rand += 0xF;
-	 //LCD_ShowString(LCD_W/2 - 10, LCD_H/2 - 10 ,"hello kogwejun");
-	 //LCD_DrawRectangle(0, 0, 60, 120);
-	 //LCD_ShowChar(10, 10, ' ',0);
-	 //LCD_ShowString(10,30,"2.2 inch TFT 240*320");
-	 os_printf("test %x\n", color_rand);
+	//LCD_Clear(color_rand);
+	//color_rand += 0xF;
+	//LCD_ShowString(LCD_W/2 - 10, LCD_H/2 - 10 ,"hello kogwejun");
+	//LCD_DrawRectangle(0, 0, 60, 120);
+	//LCD_ShowChar(10, 10, ' ',0);
+	//LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+	DisplayTime(sntpTupdate, sntpdata);
+	os_printf("test %x\n", color_rand);
 }
 
 //wifi Para data exist, sacn the ap
@@ -365,7 +398,8 @@ user_scan(void)
    struct scan_config config;
    os_memset(&config, 0, sizeof(config));
    config.ssid = s_staconf.ssid;
-   wifi_station_scan(&config, user_scan_done);
+   if (wifi_station_scan(&config, user_scan_done) == 0)
+	   smartconfig_start(smartconfig_done);
 }
 
 void ICACHE_FLASH_ATTR
@@ -383,6 +417,7 @@ user_init(void)
 
     //Get wi_fi last config data from memory
     wifi_station_get_config_default(&s_staconf);
+    s_staconf.bssid_set = 0;
     if (os_strlen(s_staconf.ssid) != 0) {
         os_printf("user_scan\n");
         system_init_done_cb(user_scan);
@@ -394,10 +429,10 @@ user_init(void)
     SNTP_Init();
     Lcd_Init();
     LCD_Clear(BLACK);
-    LCD_ShowString(10,30,"2.2 inch TFT 240*320");
-    showimage();
+    //LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+    //showimage();
     //spi_interface_test();
-//    LCD_fillScreen(BLUE);
+    //LCD_fillScreen(BLUE);
     //LCD_Clear(WHITE);
     //spi_master_init(1);
 
