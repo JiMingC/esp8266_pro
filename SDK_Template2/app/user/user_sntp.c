@@ -6,9 +6,7 @@
  */
 
 #include "user_sntp.h"
-#include "ets_sys.h"
-#include "sntp.h"
-#include "osapi.h"
+
 /**
  @brief 初始化SNTP服务
  @param 无
@@ -22,18 +20,6 @@ SNTP_Init(void)
 	sntp_setservername(2,"2.cn.pool.ntp.org");
 	sntp_init();
 }
-
-
-typedef struct sntpData_t
-{
-	uint8 week;
-	uint8 month;
-	uint8 day;
-	uint8 hour;
-	uint8 minute;
-	uint8 second;
-	uint8 year;
-} SntpData_t;
 
 
 
@@ -242,29 +228,18 @@ checkWahtYear(char *pYear)
 	return year;
 }
 
-static void ICACHE_FLASH_ATTR
-sntpTimestampToSntpdata(uint32 cur_timetamp, SntpData_t *sntpdata) {
-
-}
-/**
- @brief SNTP时间转化为简单日期格式
- @param pSntpRealTime -[in] 实时时间
- @return 简单日期格式时间字符串
-*/
-static char *ICACHE_FLASH_ATTR
-sntpTimeChangeToSimpleDateFormat(char *pSntpRealTime)
-{
+static char* ICACHE_FLASH_ATTR
+sntpTimestampToSntpdata(char *pSntpRealTime) {
 	if(!pSntpRealTime)
 	{
 		return "";
 	}
 
 	pSntpRealTime[24] = '\0';						// 不要年份后面的数据
-	SntpData_t sntpData;
 	uint8 dateType[7] = {3, 3, 2, 2, 2, 2, 4};		// 3-Fri 3-May 2-31 2-11: 2-21: 2-42 4-2019
 	uint8 temp[5];
 	uint8 i = 0, j = 0;
-
+	SntpData_t sntpData;
 	while(*pSntpRealTime != '\0')
 	{
 		if(*pSntpRealTime == ' ' || *pSntpRealTime == ':')
@@ -317,6 +292,85 @@ sntpTimeChangeToSimpleDateFormat(char *pSntpRealTime)
 	return pSntpRealTime;
 }
 
+
+static const int MON1[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};    //平年
+static const int MON2[12] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};    //闰年
+static const int FOURYEARS = (366 + 365 +365 +365);    //每个四年的总天数
+static const int DAYMS = 24*3600;    //每天的毫秒数
+/**
+ @brief SNTP时间转化为简单日期格式
+ @param pSntpRealTime -[in] 实时时间
+ @return 简单日期格式时间字符串
+*/
+char* ICACHE_FLASH_ATTR
+sntpTimeChangeToSimpleDateFormat(char *pSntpRealTime, SntpData_t *sntpData, u32 timeS)
+{
+	if(!pSntpRealTime || (sntpData == NULL))
+	{
+		return "";
+	}
+
+	//timeS -= (8*3600);
+	u32 nDays = timeS/24/3600 + 1;
+	u32 nYear4 = nDays/1461;
+	u32 nRemain = nDays%1461;
+	u32 nDesYear = 1970 + nYear4*4;
+	u32 nDesMonth = 0, nDesDay = 0;
+	os_printf("%d %d %d %d\n", nDays, nYear4, nRemain, nDesYear);
+	bool bLeapYear = false;
+	u32 sRemain = timeS%DAYMS;
+	if ( nRemain<365 )//一个周期内，第一年
+	{//平年
+
+	}
+	else if ( nRemain<(365+365) )//一个周期内，第二年
+	{//平年
+		nDesYear += 1;
+		nRemain -= 365;
+	}
+	else if ( nRemain<(365+365+365) )//一个周期内，第三年
+	{//平年
+		nDesYear += 2;
+		nRemain -= (365+365);
+	}
+	else//一个周期内，第四年，这一年是闰年
+	{//润年
+		nDesYear += 3;
+		nRemain -= (365+365+366);
+		bLeapYear = true;
+	}
+    int *pMonths = bLeapYear?MON2:MON1;
+    int nTemp = nRemain;
+    //循环减去12个月中每个月的天数，直到剩余天数小于等于0，就找到了对应的月份
+    for ( int i=0; i<12; ++i )
+    {
+        nTemp -= pMonths[i];
+        if ( nTemp<=0 )
+        {
+        	nDesMonth = i+1;
+            if ( nTemp == 0 )//表示刚好是这个月的最后一天，那么天数就是这个月的总天数了
+            	nDesDay = pMonths[i];
+            else
+            	nDesDay = nDays;
+            break;
+        }
+        nDays = nTemp;
+    }
+    sntpData->year = nDesYear;
+    sntpData->month = nDesMonth;
+    sntpData->day = nDesDay;
+    sntpData->hour = sRemain/3600;
+    sntpData->minute = sRemain/60%60;
+    sntpData->second = sRemain%60;
+
+	os_memset(pSntpRealTime, 0, 24);
+	os_sprintf(pSntpRealTime, "%d-%d-%d %02d:%02d:%02d",
+								sntpData->year, sntpData->month,
+								sntpData->day, sntpData->hour,
+								sntpData->minute, sntpData->second);
+	return pSntpRealTime;
+}
+
 /**
  @brief 获取SNTP时间
  @param pRealTime -[in&out] 实时时间
@@ -337,7 +391,65 @@ sntp_read_timer_callback(void *arg)
 	uint8 time1[25];
 	os_sprintf(time1, "%s", sntp_get_real_time(time));
 	SntpData_t sntpdata;
-//	os_printf("time:%d\r\n",time);
-//	os_printf("date:%s\r\n",sntp_get_real_time(time));
-	os_printf("date:%s\r\n", sntpTimeChangeToSimpleDateFormat(time1));
+	os_printf("time:%d\r\n",time);
+	os_printf("date:%s\r\n",sntp_get_real_time(time));
+	os_printf("date:%s\r\n", sntpTimeChangeToSimpleDateFormat(time1, &sntpdata, time));
+}
+
+
+u8 ICACHE_FLASH_ATTR
+SntpdataUpadte(SntpData_t *O_sntpData, SntpData_t N_sntpData) {
+	if (O_sntpData == NULL)
+		return 0;
+	u8 ret = 0;
+//	sntpData->year, sntpData->month,
+//	sntpData->day, sntpData->hour,
+//	sntpData->minute, sntpData->second);
+	if (O_sntpData->year == N_sntpData.year)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->year = N_sntpData.year;
+	}
+	ret <<= 1;
+
+	if (O_sntpData->month == N_sntpData.month)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->month = N_sntpData.month;
+	}
+	ret <<= 1;
+
+	if (O_sntpData->day == N_sntpData.day)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->day = N_sntpData.day;
+	}
+	ret <<= 1;
+
+	if (O_sntpData->hour == N_sntpData.hour)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->hour = N_sntpData.hour;
+	}
+	ret <<= 1;
+
+	if (O_sntpData->minute == N_sntpData.minute)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->minute = N_sntpData.minute;
+	}
+	ret <<= 1;
+
+	if (O_sntpData->second == N_sntpData.second)
+		ret |= 0;
+	else {
+		ret |= 1;
+		O_sntpData->second = N_sntpData.second;
+	}
+	return ret;
 }
