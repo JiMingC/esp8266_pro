@@ -107,7 +107,7 @@ LOCAL os_timer_t send_data_timer;     	//for tcp/udp data send
 LOCAL struct ip_info user_ip;
 
 LOCAL SntpData_t sntpdata;
-LOCAL u8 sntpTupdate;
+LOCAL u8 sntpTupdate = 0xFF;
 
 #if   TCP_CLIENT
 struct espconn tcp_client;
@@ -375,7 +375,6 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
     if(!system_partition_table_regist(at_partition_table, sizeof(at_partition_table)/sizeof(at_partition_table[0]),SPI_FLASH_SIZE_MAP)) {
 		os_printf("system_partition_table_regist fail\r\n");
 		while(1);
-
 	}
 }
 LOCAL u16 color_rand;
