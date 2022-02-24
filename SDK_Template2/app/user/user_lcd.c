@@ -48,7 +48,7 @@ LOCAL u8 bitdata;
 #define bit1	((bitdata >> 1) & 0x1)
 #define bit0	((bitdata >> 0) & 0x1)
 
-u16 BACK_COLOR = WHITE, POINT_COLOR = BLACK;
+u16 BACK_COLOR = BLACK, POINT_COLOR = WHITE;
 
 u8 image[]={ /* 0X00,0X10,0X28,0X00,0X28,0X00,0X01,0X1B,*/
 0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,0XFF,
@@ -1663,4 +1663,78 @@ void showimage() //ÏÔÊ¾40*40Í¼Æ¬
 		 }
 	}
 
+}
+
+/******************************************************************************
+ * FunctionName : MLCD_ShowChar
+ * Description  : Display char on area
+ * Parameters   : u16 x - x point start.
+ *                u16 y - y point start.
+ *                u8 num - need to display char " "--> "~"
+ *                u8 fonts_base - fonts size (1:0804 2:1608 3:2412 4:3216)
+*******************************************************************************/
+void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base)
+{
+    u8 temp;
+    u8 pos,t,times_x, times_y;
+	u16 x0=x;
+	u16 colortemp=WHITE;
+	u8 FONTS_W, FONTS_H;
+	if (fonts_base == 1) {
+		FONTS_W = 4; FONTS_H = 8;
+	} else if (fonts_base == 2) {
+		FONTS_W = 8; FONTS_H = 16;
+	} else if (fonts_base == 3) {
+		FONTS_W = 12; FONTS_H = 24;
+	} else if (fonts_base == 4) {
+		FONTS_W = 16; FONTS_H = 32;
+	} else {
+		return;
+	}
+    if(x>(LCD_W- FONTS_W)|| y>(LCD_H-FONTS_H))return;
+	//set windows
+	num=num-' ';//get char offset
+	Address_set(x,y,x+FONTS_W-1,y+FONTS_H-1);      //set point pos
+
+	for(pos=0;pos<16;pos++)
+	{
+		temp=my_asc2_1608[(u16)num*16+pos];		 //call for 1608 fonts
+		for (times_y = 0; times_y < fonts_base/2; times_y++) {
+			for(t=0;t<8;t++)
+			{
+				if(temp&0x01)
+					POINT_COLOR=colortemp;
+				else
+					POINT_COLOR=BACK_COLOR;
+				for(times_x = 0; times_x < fonts_base/2; times_x++) {
+					LCD_WR_DATA(POINT_COLOR);
+				}
+				temp>>=1;
+				x++;
+			}
+		}
+		x=x0;
+		y++;
+	}
+
+	POINT_COLOR=colortemp;
+}
+
+/******************************************************************************
+ * FunctionName : MLCD_Show2Num
+ * Description  : Display char on area
+ * Parameters   : u16 x - x point start.
+ *                u16 y - y point start.
+ *                u8 num - need to display char " "--> "~"
+ *                u8 fonts_base - fonts size (1:0804 2:1608 3:2412 4:3216)
+*******************************************************************************/
+void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base)
+{
+	u8 t,temp;
+	for(t=0;t<2;t++)
+	{
+		temp=(num/mypow(10,2-t-1))%10;
+	 	//LCD_ShowChar(x+8*t,y,temp+'0',0);
+		MLCD_ShowChar(x+8*t, y, temp+'0', fonts_base);
+	}
 }

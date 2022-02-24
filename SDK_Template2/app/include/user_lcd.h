@@ -89,4 +89,7 @@ void LCD_Show2Num(u16 x,u16 y,u16 num,u8 len);//
 void LCD_ShowString(u16 x,u16 y,const u8 *p);		 //
 void showimage();
 void xianshi();
+
+void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base);
+void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base);
 #endif /* APP_INCLUDE_USER_LCD_H_ */
