@@ -280,7 +280,7 @@ const unsigned char asc2_0804[95][8]={
 {0x00,0x00,0xE0,0xA0,0x40,0x80,0xE0,0x00},/*"2",18*/
 {0x00,0x00,0xE0,0xC0,0x20,0xA0,0xE0,0x00},/*"3",19*/
 {0x00,0x00,0x20,0x60,0xA0,0x60,0x20,0x00},/*"4",20*/
-{0x00,0x00,0xE0,0x80,0xE0,0xA0,0xE0,0x00},/*"5",21*/
+{0x00,0xF0,0x80,0xF0,0x10,0x10,0xF0,0x00},/*"5",21*/
 {0x00,0x00,0x60,0x80,0xF0,0x90,0x70,0x00},/*"6",22*/
 {0x00,0x00,0x70,0x20,0x20,0x20,0x20,0x00},/*"7",23*/
 {0x00,0x00,0xE0,0xA0,0x40,0xA0,0xE0,0x00},/*"8",24*/
@@ -473,15 +473,18 @@ u8 my_asc2_1608[1520]={
 0x00,0x00,0x80,0x40,0x40,0x20,0x20,0x10,0x10,0x08,0x08,0x04,0x04,0x02,0x02,0x00,/*"/",15*/
 
 0x00,0x7E,0x7E,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0x42,0x7E,0x7E,0x00,/*"0",16*/
-0x00,0x18,0x1C,0x1C,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x00,/*"1",17*/
-0x00,0x7E,0x7E,0x42,0x40,0x40,0x40,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x00,/*"2",18*/
-0x00,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x00,/*"3",19*/
-0x00,0x26,0x26,0x26,0x26,0x26,0x26,0x7E,0x7E,0x20,0x20,0x20,0x20,0x20,0x20,0x00,/*"4",20*/
-0x00,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x40,0x40,0x40,0x42,0x7E,0x7E,0x00,/*"5",21*/
-0x00,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x00,/*"6",22*/
-0x00,0x7E,0x7E,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x40,0x00,/*"7",23*/
+0x00,0x18,0x38,0x38,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x00,/*"1",17*/
+0x00,0x7E,0x7E,0x42,0x02,0x02,0x02,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x00,/*"2",18*/
+0x00,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x00,/*"3",19*/
+
+0x00,0x64,0x64,0x64,0x64,0x64,0x64,0x7E,0x7E,0x04,0x04,0x04,0x04,0x04,0x04,0x00,/*"4",20*/
+0x00,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x02,0x02,0x02,0x42,0x7E,0x7E,0x00,/*"5",21*/
+
+0x00,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x00,/*"6",22*/
+
+0x00,0x7E,0x7E,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x00,/*"7",23*/
 0x00,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x00,/*"8",24*/
-0x00,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x40,0x40,0x40,0x40,0x7E,0x7E,0x00,/*"9",25*/
+0x00,0x7E,0x7E,0x42,0x42,0x42,0x42,0x7E,0x7E,0x02,0x02,0x02,0x02,0x7E,0x7E,0x00,/*"9",25*/
 
 0x00,0x00,0x00,0x18,0x18,0x00,0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x00,0x00,0x00,/*":",26*/
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x00,0x00,0x00,0x00,0x08,0x08,0x04,/*";",27*/
@@ -1113,7 +1116,7 @@ Lcd_Init() {
 	if(LCD_CS_STATUS()==0)
 	{
 	   LCD_WR_REG_DATA(0,0);
-	   LCD_ShowString(0,0," ");
+	   //LCD_ShowString(0,0," ");
 	   LCD_ShowNum(0,0,0,0);
 	   LCD_Show2Num(0,0,0,0);
 	   LCD_DrawPoint_big(0,0);
@@ -1228,6 +1231,49 @@ LCD_Clear(u16 Color) {
 	}
 }
 
+u8 ICACHE_FLASH_ATTR
+GetXfromFontssize(u8 fonts_base) {
+	u8 ret;
+	if (fonts_base == 1)
+		ret = 4;
+	else if (fonts_base == 2)
+		ret = 6;
+	else if (fonts_base == 3)
+		ret = 8;
+	else if (fonts_base == 4)
+		ret = 12;
+	else if (fonts_base == 5)
+		ret = 16;
+	else if (fonts_base == 6)
+		ret = 20;
+	else if (fonts_base == 7)
+		ret = 24;
+	else
+		ret = 0;
+	return ret;
+}
+
+u8 ICACHE_FLASH_ATTR
+GetYfromFontssize(u8 fonts_base) {
+	u8 ret;
+	if (fonts_base == 1)
+		ret = 8;
+	else if (fonts_base == 2)
+		ret = 12;
+	else if (fonts_base == 3)
+		ret = 16;
+	else if (fonts_base == 4)
+		ret = 24;
+	else if (fonts_base == 5)
+		ret = 32;
+	else if (fonts_base == 6)
+		ret = 40;
+	else if (fonts_base == 7)
+		ret = 48;
+	else
+		ret = 0;
+	return ret;
+}
 /******************************************************************************
  * FunctionName : showhanzi
  * Description  : display hanzi 32*32
@@ -1550,6 +1596,42 @@ void LCD_ShowChar(u16 x, u16 y, char ch, u16 back_color, u16 font_color, u8 font
 		 return;
 }
 #endif
+
+
+void LCD_ShowChar2(u16 x,u16 y,u8 num,u8 mode, u8 size_base)
+{
+    u8 temp;
+    u8 pos,t;
+	u16 x0=x;
+	u16 colortemp=POINT_COLOR;
+	u8 fonts_w = GetXfromFontssize(size_base);
+	u8 fonts_h = GetYfromFontssize(size_base);
+    if(x>LCD_W-fonts_w||y>LCD_H-fonts_h)return;
+	//set windows
+	num=num-' ';//get char offset
+	Address_set(x,y,x+fonts_w-1,y+fonts_h-1);      //set point pos
+
+	for(pos=0;pos<fonts_h;pos++)
+	{
+		if (size_base == 3) {
+				temp=asc2_1608[(u16)num*16+pos];		 //call for 1608 fonts
+		} else if (size_base == 2) {
+				temp=asc2_1206[(u16)num][pos];		 //call for 1206 fonts
+		} else if (size_base == 1) {
+				temp=asc2_0804[(u16)num][pos];		 //call for 0804 fonts
+		}
+		for(t=0; t<fonts_w; t++)
+		{
+			if(temp&0x80)
+				POINT_COLOR=colortemp;
+			else
+				POINT_COLOR=BACK_COLOR;
+			LCD_WR_DATA(POINT_COLOR);
+			temp<<= 1;
+		}
+	}
+	POINT_COLOR=colortemp;
+}
 ////m^n func
 u32 mypow(u8 m,u8 n)
 {
@@ -1599,7 +1681,7 @@ void LCD_Show2Num(u16 x,u16 y,u16 num,u8 len)
 	for(t=0;t<len;t++)
 	{
 		temp=(num/mypow(10,len-t-1))%10;
-	 	//LCD_ShowChar(x+8*t,y,temp+'0',0);
+	 	LCD_ShowChar2(x+4*t,y,temp+'0',0,1);
 	}
 }
 
@@ -1610,18 +1692,20 @@ void LCD_Show2Num(u16 x,u16 y,u16 num,u8 len)
  *                u16 y - y point start.
  *                const u8 *p - string ptr.
 *******************************************************************************/
-void LCD_ShowString(u16 x,u16 y,const u8 *p)
+void LCD_ShowString(u16 x,u16 y,const u8 *p, u8 size_base)
 {
+	u8 fonts_w = GetXfromFontssize(size_base);
+	u8 fonts_h = GetYfromFontssize(size_base);
     while(*p!='\0')
     {
-        if(x>LCD_W-16){x=0;y+=16;}
-        if(y>LCD_H-16){y=x=0;}
+        if(x>LCD_W-fonts_w){x=0;y+=fonts_h;}
+        if(y>LCD_H-fonts_h){y=x=0;}
 #if 1
-        LCD_ShowChar(x,y,*p,0);
+        LCD_ShowChar2(x,y,*p,0,size_base);
 #else
         LCD_ShowChar(x,y,*p,BACK_COLOR, POINT_COLOR, 8);
 #endif
-        x+=8;
+        x+=fonts_w;
         p++;
     }
 }
@@ -1644,7 +1728,7 @@ void xianshi()//ÏÔÊ¾ÐÅÏ¢
 	POINT_COLOR=0x1F;
 	showhanzi(10,0,0);  //¾§
 	showhanzi(45,0,1);  //Ò«
-    LCD_ShowString(10,30,"1.8 inch TFT 120*160");
+    LCD_ShowString(10,30,"1.8 inch TFT 120*160", 2);
 }
 void showimage() //ÏÔÊ¾40*40Í¼Æ¬
 {
@@ -1671,7 +1755,7 @@ void showimage() //ÏÔÊ¾40*40Í¼Æ¬
  * Parameters   : u16 x - x point start.
  *                u16 y - y point start.
  *                u8 num - need to display char " "--> "~"
- *                u8 fonts_base - fonts size (1:0804 2:1608 3:2412 4:3216)
+ *                u8 fonts_base - fonts size (1:0804 2:1206 3:1608 4:2412 5:3216)
 *******************************************************************************/
 void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base)
 {
@@ -1680,41 +1764,62 @@ void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base)
 	u16 x0=x;
 	u16 colortemp=WHITE;
 	u8 FONTS_W, FONTS_H;
-	if (fonts_base == 1) {
-		FONTS_W = 4; FONTS_H = 8;
-	} else if (fonts_base == 2) {
-		FONTS_W = 8; FONTS_H = 16;
-	} else if (fonts_base == 3) {
-		FONTS_W = 12; FONTS_H = 24;
-	} else if (fonts_base == 4) {
-		FONTS_W = 16; FONTS_H = 32;
-	} else {
+    if (fonts_base == 1) {
+        FONTS_W = 4; FONTS_H = 8;
+    } else if (fonts_base == 2) {
+        FONTS_W = 6; FONTS_H = 12;
+    } else if (fonts_base == 3) {
+        FONTS_W = 8; FONTS_H = 16;
+    } else if (fonts_base == 4) {
+        FONTS_W = 12; FONTS_H = 24;
+    } else if (fonts_base == 5) {
+        FONTS_W = 16; FONTS_H = 32;
+    } else {
+        return;
+    }
+
+	if (FONTS_W == 0 || FONTS_H == 0) {
 		return;
 	}
     if(x>(LCD_W- FONTS_W)|| y>(LCD_H-FONTS_H))return;
 	//set windows
 	num=num-' ';//get char offset
-	Address_set(x,y,x+FONTS_W-1,y+FONTS_H-1);      //set point pos
+	Address_set(x,y,x+FONTS_W-1, y+FONTS_H-1);      //set point pos
 
-	for(pos=0;pos<16;pos++)
-	{
-		for (times_y = 0; times_y < fonts_base/2; times_y++) {
-			temp=my_asc2_1608[(u16)num*16+pos];		 //call for 1608 fonts
-			for(t=0;t<8;t++)
+	if (fonts_base == 3 || fonts_base == 5) {
+		for(pos=0;pos<16;pos++)
+		{
+			for (times_y = 0; times_y < FONTS_H/16; times_y++) {
+				temp=my_asc2_1608[(u16)num*16+pos];		 //call for 1608 fonts
+				for(t=0;t<8;t++)
+				{
+					if(temp&0x80)
+						POINT_COLOR=colortemp;
+					else
+						POINT_COLOR=BACK_COLOR;
+					for(times_x = 0; times_x < FONTS_W/8; times_x++) {
+						LCD_WR_DATA(POINT_COLOR);
+					}
+					temp<<=1;
+				}
+			}
+		}
+	} else if (fonts_base == 1) {
+		for(pos=0;pos<8;pos++)
+		{
+			temp=my_asc2_1608[(u16)num*16+pos+2*pos];		 //call for 1608 fonts
+			for(t=0;t<4;t++)
 			{
-				if(temp&0x01)
+				if(temp&0x80)
 					POINT_COLOR=colortemp;
 				else
 					POINT_COLOR=BACK_COLOR;
-				for(times_x = 0; times_x < fonts_base/2; times_x++) {
+				for(times_x = 0; times_x < 4; times_x++) {
 					LCD_WR_DATA(POINT_COLOR);
 				}
-				temp>>=1;
-				x++;
+				temp<<=2;
 			}
 		}
-		x=x0;
-		y++;
 	}
 
 	POINT_COLOR=colortemp;
@@ -1731,10 +1836,12 @@ void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base)
 void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base)
 {
 	u8 t,temp;
+	u8 fonts_w = GetXfromFontssize(fonts_base);
+	u8 fonts_h = GetYfromFontssize(fonts_base);
 	for(t=0;t<2;t++)
 	{
 		temp=(num/mypow(10,2-t-1))%10;
 	 	//LCD_ShowChar(x+8*t,y,temp+'0',0);
-		MLCD_ShowChar(x+4*t*fonts_base, y, temp+'0', fonts_base);
+		MLCD_ShowChar(x+t*fonts_w, y, temp+'0', fonts_base);
 	}
 }

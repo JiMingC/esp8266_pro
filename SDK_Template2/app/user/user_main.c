@@ -109,6 +109,8 @@ LOCAL struct ip_info user_ip;
 LOCAL SntpData_t sntpdata;
 LOCAL u8 sntpTupdate = 0xFF;
 
+LOCAL u8 mcu_status = 0;
+
 #if   TCP_CLIENT
 struct espconn tcp_client;
 #elif TCP_SERVER
@@ -245,12 +247,15 @@ smartconfig_done(sc_status status, void *pdata)
 {
     switch(status) {
         case SC_STATUS_WAIT:					//
+        	mcu_status = mcu_SmartConfiging;
             os_printf("SC_STATUS_WAIT\n");
             break;
         case SC_STATUS_FIND_CHANNEL:			//
+        	mcu_status = mcu_SmartConfig_founded;
             os_printf("SC_STATUS_FIND_CHANNEL\n");
             break;
         case SC_STATUS_GETTING_SSID_PSWD:
+        	mcu_status = mcu_Get_SSID_PSWD;
             os_printf("SC_STATUS_GETTING_SSID_PSWD\n");
 			sc_type *type = pdata;
             if (*type == SC_TYPE_ESPTOUCH) {
@@ -260,6 +265,7 @@ smartconfig_done(sc_status status, void *pdata)
             }
             break;
         case SC_STATUS_LINK:
+        	mcu_status = mcu_WIFI_Connecting;
             os_printf("SC_STATUS_LINK\n"); //
             struct station_config *sta_conf = pdata;
 
@@ -268,6 +274,7 @@ smartconfig_done(sc_status status, void *pdata)
 	        wifi_station_connect();
             break;
         case SC_STATUS_LINK_OVER:				//
+        	mcu_status = mcu_SmartConfig_over;
             os_printf("SC_STATUS_LINK_OVER\n");
             if (pdata != NULL) {
 				//SC_TYPE_ESPTOUCH
@@ -295,7 +302,7 @@ sntp_read_timer_callback2(void *arg)
 	os_sprintf(time1, "%s", sntp_get_real_time(time));
 
 	SntpData_t T_sntpdata;
-	sntpTimeChangeToSimpleDateFormat(time1, &T_sntpdata, time);
+	os_printf("date:%s\r\n", sntpTimeChangeToSimpleDateFormat(time1, &T_sntpdata, time));
 	sntpTupdate = SntpdataUpadte(&sntpdata, T_sntpdata);
 //	sntpdata.hour = T_sntpdata.hour;
 //	sntpdata.minute = T_sntpdata.minute;
@@ -313,8 +320,10 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 	uint8 status;
 	os_timer_disarm(&user_timer); //
 	count++; //
+	mcu_status = mcu_WIFI_Connecting;
 	status = wifi_station_get_connect_status(); //
 	if(status == STATION_GOT_IP){ //
+		mcu_status = mcu_WIFI_Success;
 		os_printf("wi_fi connect.\r\n");
 		os_timer_disarm(&user_timer);
 		os_timer_setfn(&user_timer, sntp_read_timer_callback2, NULL);
@@ -338,8 +347,10 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 #endif
 		return;
 	}else{
+		mcu_status = mcu_WIFI_Reconnect;
 		os_printf("wi_fi connect[%d].\r\n", count);
 		if(count > 7){ //
+			mcu_status = mcu_WIFI_Fail;
 			os_printf("wi_fi connect fail.\r\n");
 			smartconfig_start(smartconfig_done);
 			return;
@@ -351,6 +362,7 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 LOCAL void ICACHE_FLASH_ATTR
 user_scan_done(void *arg, STATUS status) {
 	if (status == OK) {
+		mcu_status = mcu_WIFI_Scan;
         os_printf("SCAN_STATUS_LINK\n"); //
 
         wifi_station_set_config(&s_staconf);
@@ -386,6 +398,7 @@ Main_loop() {
 	//LCD_DrawRectangle(0, 0, 60, 120);
 	//LCD_ShowChar(10, 10, ' ',0);
 	//LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
 	os_printf("test %x\n", color_rand);
 }
@@ -418,10 +431,12 @@ user_init(void)
     wifi_station_get_config_default(&s_staconf);
     s_staconf.bssid_set = 0;
     if (os_strlen(s_staconf.ssid) != 0) {
+    	mcu_status = mcu_WIFI_Scan;
         os_printf("user_scan\n");
         system_init_done_cb(user_scan);
     } else {
         os_printf("smart_cfg\n");
+        mcu_status = mcu_SmartConfiging;
         smartconfig_start(smartconfig_done);
     }
 

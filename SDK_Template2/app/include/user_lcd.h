@@ -78,18 +78,21 @@ void LCD_DrawLine(u16 x1, u16 y1, u16 x2, u16 y2);
 void LCD_DrawRectangle(u16 x1, u16 y1, u16 x2, u16 y2);
 void LCD_Fill(u16 xsta,u16 ysta,u16 xend,u16 yend,u16 color);
 #if 1
-void LCD_ShowString(u16 x,u16 y,const u8 *p);
+//void LCD_ShowString(u16 x,u16 y,const u8 *p);
 void LCD_ShowChar(u16 x,u16 y,u8 num,u8 mode);
+void LCD_ShowChar2(u16 x,u16 y,u8 num,u8 mode, u8 size_base);
 #else
 void LCD_ShowChar(u16 x, u16 y, char ch, u16 back_color, u16 font_color, u8 font_size);//
 #endif
 void LCD_ShowCharStr(u16 x, u16 y, char* str, u16 back_color, u16 font_color, u8 font_size);
 void LCD_ShowNum(u16 x,u16 y,u32 num,u8 len);//
 void LCD_Show2Num(u16 x,u16 y,u16 num,u8 len);//
-void LCD_ShowString(u16 x,u16 y,const u8 *p);		 //
+void LCD_ShowString(u16 x,u16 y,const u8 *p, u8 size_base);		 //
 void showimage();
 void xianshi();
 
 void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base);
 void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base);
+u8 GetXfromFontssize(u8 fonts_base);
+u8 GetYfromFontssize(u8 fonts_base);
 #endif /* APP_INCLUDE_USER_LCD_H_ */
