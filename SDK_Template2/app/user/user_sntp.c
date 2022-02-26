@@ -339,7 +339,7 @@ sntpTimeChangeToSimpleDateFormat(char *pSntpRealTime, SntpData_t *sntpData, u32 
 		nRemain -= (365+365+366);
 		bLeapYear = true;
 	}
-    int *pMonths = bLeapYear?MON2:MON1;
+    const int *pMonths = bLeapYear?MON2:MON1;
     int nTemp = nRemain;
     //循环减去12个月中每个月的天数，直到剩余天数小于等于0，就找到了对应的月份
     for ( int i=0; i<12; ++i )

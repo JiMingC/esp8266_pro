@@ -36,6 +36,7 @@
 #include "user_display.h"
 #include "user_sntp.h"
 #include "user_TcpServer.h"
+#include "user_WeatherServer.h"
 #include "user_lcd.h"
 #include "spi_test.h"
 
@@ -108,11 +109,13 @@ LOCAL struct ip_info user_ip;
 
 LOCAL SntpData_t sntpdata;
 LOCAL u8 sntpTupdate = 0xFF;
+WeatherData_t weatherData;
 
 LOCAL u8 mcu_status = 0;
 
 #if   TCP_CLIENT
 struct espconn tcp_client;
+struct espconn weather_tcp;
 #elif TCP_SERVER
 struct espconn *tcp_server;
 #elif UDP_TEST
@@ -227,7 +230,7 @@ airkiss_start_discover(void)
 }
 #endif
 
-LOCAL uint8  messages_send_buffer[50];
+LOCAL uint8  messages_send_buffer[200];
 LOCAL uint16 messages_send_count = 0;
 void ICACHE_FLASH_ATTR
 TCP_Send_data() {
@@ -241,6 +244,13 @@ TCP_Send_data() {
 	messages_send_count++;
 }
 
+//void ICACHE_FLASH_ATTR
+//GET_WeatherData() {
+//	os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
+//	tcp_client_send_data(&weather_tcp,messages_send_buffer,strlen(messages_send_buffer));
+//
+//	messages_send_count++;
+//}
 
 void ICACHE_FLASH_ATTR
 smartconfig_done(sc_status status, void *pdata)
@@ -329,6 +339,10 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 		os_timer_setfn(&user_timer, sntp_read_timer_callback2, NULL);
 		os_timer_arm(&user_timer, 1000, 1);
 		wifi_get_ip_info(STATION_IF,&user_ip);		//while connect success, get ip info
+
+//		os_timer_disarm(&send_data_timer);
+//		os_timer_setfn(&send_data_timer, (os_timer_func_t *) GET_WeatherData,NULL);
+//		os_timer_arm(&send_data_timer, 2000, true);
 #if   TCP_CLIENT
 		tcp_client_init(&tcp_client,TCP_SERVER_IP, &user_ip.ip,TCP_SERVER_PORT);
 		os_timer_disarm(&send_data_timer);
@@ -390,17 +404,37 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
 	}
 }
 LOCAL u16 color_rand;
+LOCAL u16 local_tick = 0;
 void ICACHE_FLASH_ATTR
 Main_loop() {
+	local_tick++;
+	if (local_tick > 1000)
+		local_tick = 0;
 	//LCD_Clear(color_rand);
 	//color_rand += 0xF;
 	//LCD_ShowString(LCD_W/2 - 10, LCD_H/2 - 10 ,"hello kogwejun");
 	//LCD_DrawRectangle(0, 0, 60, 120);
 	//LCD_ShowChar(10, 10, ' ',0);
 	//LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+	if(mcu_status == mcu_WIFI_Success) {
+		if (local_tick%5 == 0) {
+			tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
+			os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
+			tcp_client_send_data(&weather_tcp,messages_send_buffer,strlen(messages_send_buffer));
+		}
+	}
 	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
-	os_printf("test %x\n", color_rand);
+	if (weatherData.update) {
+		weatherData.update = 0;
+		os_printf("clouds:%d, code:%d, humidity:%d, pressure:%dPa, Temp:%dC\r\n", weatherData.clouds, weatherData.code,
+										weatherData.humidity, weatherData.pressure,
+										weatherData.temperature);
+		os_printf("local_name:%s, local_country:%s, last_time:%s\r\n", weatherData.local_name,
+																	   weatherData.local_country,
+																	   weatherData.last_update);
+	}
+
 }
 
 //wifi Para data exist, sacn the ap
@@ -441,6 +475,7 @@ user_init(void)
     }
 
     SNTP_Init();
+    weatherDataInit(&weatherData);
     Lcd_Init();
     LCD_Clear(BLACK);
     //LCD_ShowString(10,30,"2.2 inch TFT 240*320");

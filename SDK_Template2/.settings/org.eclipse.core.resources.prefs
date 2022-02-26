@@ -1,3 +1,6 @@
 eclipse.preferences.version=1
+encoding//app/include/user_lcd.h=UTF-8
+encoding//app/user/user_Tcoserver.c=UTF-8
+encoding//app/user/user_lcd.c=UTF-8
 encoding//app/user/user_main.c=UTF-8
 encoding//smart_config/user/user_main.c=UTF-8

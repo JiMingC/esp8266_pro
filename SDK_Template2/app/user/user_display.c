@@ -63,7 +63,9 @@ DisplayTime(u8 sntpTupdate,SntpData_t sntpdata) {
 	sntpTupdate >>= 1;
 	if (sntpTupdate & 0x1)
 		LCD_Show2Num(17, 0, sntpdata.day, 2);
+#ifdef DEBUG
 	os_printf("%d, %d, %d\n",sntpdata.hour, sntpdata.minute, sntpdata.second );
+#endif
 #endif
 }
 
@@ -113,7 +115,7 @@ DisplayMcuMessage(u8 mcu_status) {
 	}
 	if (str_buf[0] != '\0') {
 		LCD_Fill(0, 140, LCD_W, 158, BLACK);
-		LCD_ShowString(LCD_W/2-strlen(str_buf)*x/2,LCD_H - y - 1,str_buf,fonts_base);
+		LCD_ShowString(LCD_W/2-os_strlen(str_buf)*x/2,LCD_H - y - 1,str_buf,fonts_base);
 	}
 
 }

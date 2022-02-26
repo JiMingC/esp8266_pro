@@ -9,7 +9,7 @@
  **********************************/
 
 /**
- * TCP ClientÊı¾İ·¢ËÍ»Øµ÷º¯Êı
+ * TCP Clientæ•°æ®å‘é€å›è°ƒå‡½æ•°
  */
 static void ICACHE_FLASH_ATTR
 tcp_client_sent_cb(void *arg){
@@ -17,7 +17,7 @@ tcp_client_sent_cb(void *arg){
 }
 
 /**
- * TCP ClientÊı¾İ½ÓÊÕ»Øµ÷º¯Êı£¬¿ÉÒÔÔÚÕâ´¦ÀíÊÕµ½Server·¢À´µÄÊı¾İ
+ * TCP Clientæ•°æ®æ¥æ”¶å›è°ƒå‡½æ•°ï¼Œå¯ä»¥åœ¨è¿™å¤„ç†æ”¶åˆ°Serverå‘æ¥çš„æ•°æ®
  */
 static void ICACHE_FLASH_ATTR
 tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
@@ -32,7 +32,7 @@ tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
 }
 
 /**
- * TCP ClientÖØÁ¬»Øµ÷º¯Êı£¬¿ÉÒÔÔÚ´Ëº¯ÊıÀï×öÖØÁ¬½Ó´¦Àí
+ * TCP Clienté‡è¿å›è°ƒå‡½æ•°ï¼Œå¯ä»¥åœ¨æ­¤å‡½æ•°é‡Œåšé‡è¿æ¥å¤„ç†
  */
 static void ICACHE_FLASH_ATTR
 tcp_client_recon_cb(void *arg,sint8 error){
@@ -40,7 +40,7 @@ tcp_client_recon_cb(void *arg,sint8 error){
 }
 
 /**
- * TCP Client¶Ï¿ªÁ¬½Ó»Øµ÷º¯Êı
+ * TCP Clientæ–­å¼€è¿æ¥å›è°ƒå‡½æ•°
  */
 static void ICACHE_FLASH_ATTR
 tcp_client_discon_cb(void *arg){
@@ -48,23 +48,23 @@ tcp_client_discon_cb(void *arg){
 }
 
 /**
- * TCP ClientÁ¬½Ó³É¹¦»Øµ÷º¯Êı
+ * TCP Clientè¿æ¥æˆåŠŸå›è°ƒå‡½æ•°
  */
 static void ICACHE_FLASH_ATTR
 tcp_client_connect_cb(void *arg){
 	struct espconn *pespconn = arg;
 
 	os_printf("tcp client connect tcp server successful\r\n");
-	espconn_regist_recvcb(pespconn,tcp_client_recv_cb);//×¢²á½ÓÊÕÊı¾İ»Øµ÷º¯Êı
-	espconn_regist_sentcb(pespconn,tcp_client_sent_cb);//×¢²áÊı¾İ·¢ËÍÍê³É»Øµ÷º¯Êı
-	espconn_regist_disconcb(pespconn,tcp_client_discon_cb);//×¢²á¶Ï¿ªÁ¬½Ó»Øµ÷º¯Êı
+	espconn_regist_recvcb(pespconn,tcp_client_recv_cb);//æ³¨å†Œæ¥æ”¶æ•°æ®å›è°ƒå‡½æ•°
+	espconn_regist_sentcb(pespconn,tcp_client_sent_cb);//æ³¨å†Œæ•°æ®å‘é€å®Œæˆå›è°ƒå‡½æ•°
+	espconn_regist_disconcb(pespconn,tcp_client_discon_cb);//æ³¨å†Œæ–­å¼€è¿æ¥å›è°ƒå‡½æ•°
 
 }
 /**
- * TCP Client³õÊ¼»¯º¯Êı
- * @remote_ip    ÒªÁ¬½ÓµÄTCP Server IPµØÖ·
- * @local_ip     ESP8266 IPµØÖ·
- * @remote_port  ÒªÁ¬½ÓµÄTCP Server¶Ë¿ÚºÅ
+ * TCP Clientåˆå§‹åŒ–å‡½æ•°
+ * @remote_ip    è¦è¿æ¥çš„TCP Server IPåœ°å€
+ * @local_ip     ESP8266 IPåœ°å€
+ * @remote_port  è¦è¿æ¥çš„TCP Serverç«¯å£å·
  */
 void ICACHE_FLASH_ATTR
 tcp_client_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_ip, int remote_port) {
@@ -75,22 +75,22 @@ tcp_client_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_i
 	espconn->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
 	espconn->type = ESPCONN_TCP;
 
-	os_memcpy(espconn->proto.tcp->remote_ip,&server_ip,4);//ÉèÖÃÒªÁ¬½ÓµÄServer IPµØÖ·
-	espconn->proto.tcp->remote_port = remote_port;//ÉèÖÃÒªÁ¬½ÓµÄServer ¶Ë¿ÚºÅ
-	os_memcpy(espconn->proto.tcp->local_ip,local_ip,4);//ÉèÖÃ±¾µØIPµØÖ·
-	espconn->proto.tcp->local_port = TCP_LOCAL_PORT;//ÉèÖÃ±¾µØ¶Ë¿ÚºÅ
+	os_memcpy(espconn->proto.tcp->remote_ip,&server_ip,4);//è®¾ç½®è¦è¿æ¥çš„Server IPåœ°å€
+	espconn->proto.tcp->remote_port = remote_port;//è®¾ç½®è¦è¿æ¥çš„Server ç«¯å£å·
+	os_memcpy(espconn->proto.tcp->local_ip,local_ip,4);//è®¾ç½®æœ¬åœ°IPåœ°å€
+	espconn->proto.tcp->local_port = TCP_LOCAL_PORT;//è®¾ç½®æœ¬åœ°ç«¯å£å·
 
-	espconn_regist_connectcb(espconn,tcp_client_connect_cb);//×¢²áÁ¬½Ó³É¹¦»Øµ÷º¯Êı
-	espconn_regist_reconcb(espconn,tcp_client_recon_cb);//×¢²á¶ÏÁ¬ÖØĞÂÁ¬½Ó»Øµ÷º¯Êı
+	espconn_regist_connectcb(espconn,tcp_client_connect_cb);//æ³¨å†Œè¿æ¥æˆåŠŸå›è°ƒå‡½æ•°
+	espconn_regist_reconcb(espconn,tcp_client_recon_cb);//æ³¨å†Œæ–­è¿é‡æ–°è¿æ¥å›è°ƒå‡½æ•°
 
-	espconn_connect(espconn);//ClientÁ¬½ÓServer
+	espconn_connect(espconn);//Clientè¿æ¥Server
 }
 
 /**********************************
  *   TCP CLIENT GLOBAL FUNCTIONS  *
  **********************************/
 /**
- * TCP Client¶¨Ê±·¢ËÍÊı¾İ»Øµ÷º¯Êı
+ * TCP Clientå®šæ—¶å‘é€æ•°æ®å›è°ƒå‡½æ•°
  */
 sint8 ICACHE_FLASH_ATTR
 tcp_client_send_data(struct espconn *espconn,uint8 *pdata,uint16 length){
