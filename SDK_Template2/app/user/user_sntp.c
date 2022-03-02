@@ -316,7 +316,9 @@ sntpTimeChangeToSimpleDateFormat(char *pSntpRealTime, SntpData_t *sntpData, u32 
 	u32 nRemain = nDays%1461;
 	u32 nDesYear = 1970 + nYear4*4;
 	u32 nDesMonth = 0, nDesDay = 0;
+#ifdef DEBUG
 	os_printf("%d %d %d %d\n", nDays, nYear4, nRemain, nDesYear);
+#endif
 	bool bLeapYear = false;
 	u32 sRemain = timeS%DAYMS;
 	if ( nRemain<365 )//一个周期内，第一年

@@ -18,7 +18,7 @@ weatherDataInit(WeatherData_t * wdata) {
 	wdata->update = 0;
 }
 
-static u8 ICACHE_FLASH_ATTR
+LOCAL u8 ICACHE_FLASH_ATTR
 parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
 	// receiveData是要剖析的数据
 	//首先整体判断是否为一个json格式的数据
@@ -28,14 +28,17 @@ parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
 	if (pJsonRoot !=NULL)
 	{
 		arrayItem = cJSON_GetObjectItem(pJsonRoot, "results");
-		if (!arrayItem) return 1;
+		if (!arrayItem) {
+			cJSON_Delete(pJsonRoot);
+			return 1;
+		}
 		else {
 			int arryLength = cJSON_GetArraySize(arrayItem);              // 获取数组长度
 		    int i;
 		    for (i = 0; i < 1; i++)
 		    {                                                        // 打印数组内容
 		    	wdata->update = 1;
-		        os_printf("cJSON_GetArrayItem(pArry, %d)= %d\n",i,cJSON_GetArrayItem(arrayItem, i)->valueint);
+		        //os_printf("cJSON_GetArrayItem(pArry, %d)= %d\n",i,cJSON_GetArrayItem(arrayItem, i)->valueint);
 		        object=cJSON_GetArrayItem(arrayItem,i);
 		        object=cJSON_GetObjectItem(object,"now");
 		        item=cJSON_GetObjectItem(object,"temperature");
@@ -65,10 +68,12 @@ parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
 		        item=cJSON_GetObjectItem(object,"country");
 		        if(item!=NULL)
 		        	os_memcpy(wdata->local_country, item->valuestring, os_strlen(item->valuestring));
+		        cJSON_Delete(pJsonRoot);
 		        return 0;
 		    }
 		}
 	} else {
+		cJSON_Delete(pJsonRoot);
 		return 1;
 	}
 }
@@ -76,7 +81,7 @@ parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
 /**
  * TCP Client数据发送回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 weather_client_sent_cb(void *arg){
 	os_printf("tcp client send data successful\r\n");
 }
@@ -84,7 +89,7 @@ weather_client_sent_cb(void *arg){
 /**
  * TCP Client数据接收回调函数，可以在这处理收到Server发来的数据
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 weather_client_recv_cb(void *arg,char *pdata,unsigned short len){
 	os_printf("tcp client receive tcp server data\r\n");
 	os_printf("length: %d \r\ndata: %s\r\n",len,pdata);
@@ -100,7 +105,7 @@ weather_client_recv_cb(void *arg,char *pdata,unsigned short len){
 /**
  * TCP Client重连回调函数，可以在此函数里做重连接处理
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 weather_client_recon_cb(void *arg,sint8 error){
 	os_printf("tcp client connect tcp server error %d\r\n",error);
 }
@@ -108,7 +113,7 @@ weather_client_recon_cb(void *arg,sint8 error){
 /**
  * TCP Client断开连接回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 weather_client_discon_cb(void *arg){
 	os_printf("weather client disconnect tcp server successful\r\n");
 }
@@ -116,7 +121,7 @@ weather_client_discon_cb(void *arg){
 /**
  * TCP Client连接成功回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 weather_client_connect_cb(void *arg){
 	struct espconn *pespconn = arg;
 
@@ -178,3 +183,30 @@ weather_client_send_data(struct espconn *espconn,uint8 *pdata,uint16 length){
 //#endif
 //	messages_send_count++;
 //}
+
+uint8 ICACHE_FLASH_ATTR
+weather_codeparse(u8 code){
+	u8 ret = 0;
+    if (code == 0 || code == 2) {
+    	ret = 1;
+    } else if (code == 1 || code == 3) {
+    	ret = 2;
+    } else if (code == 4 || code == 6 || code == 8 || code == 9) {
+    	ret = 3;
+    } else if (code == 5 || code == 7) {
+    	ret = 4;
+    } else if (code == 10) {
+    	ret = 5;
+    } else if (code == 11) {
+    	ret = 6;
+    } else if (code == 13 || code == 14) {
+    	ret = 7;
+    } else if (code >= 15 || code <= 18) {
+    	ret = 8;
+    } else {
+    	ret = 0;
+    }
+    return ret;
+}
+
+

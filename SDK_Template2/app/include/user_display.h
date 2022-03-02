@@ -9,6 +9,7 @@
 #define APP_INCLUDE_USER_DISPLAY_H_
 
 #include "user_sntp.h"
+#include "user_Weatherserver.h"
 #include "ets_sys.h"
 #include "osapi.h"
 
@@ -23,7 +24,10 @@ enum mcu_status{
 	mcu_SmartConfig_founded,
 	mcu_SmartConfig_over,
 	mcu_Get_SSID_PSWD,
+	mcu_BootanimationEnd,
 }mcu_status_e;
 void DisplayTime(u8 sntpTupdate,SntpData_t sntpdata);
 void DisplayMcuMessage(u8 mcu_status);
+void DisplayWeatherInfo(WeatherData_t * wdata);
+u8 bootanimation(u8 x, u8 y, u8 len, u16 color);
 #endif /* APP_INCLUDE_USER_DISPLAY_H_ */

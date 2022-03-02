@@ -40,7 +40,6 @@
 #include "user_lcd.h"
 #include "spi_test.h"
 
-
 #define DEVICE_TYPE 		"gh_9e2cff3dfa51" //wechat public number
 #define DEVICE_ID 			"122475" //model ID
 
@@ -312,7 +311,7 @@ sntp_read_timer_callback2(void *arg)
 	os_sprintf(time1, "%s", sntp_get_real_time(time));
 
 	SntpData_t T_sntpdata;
-	os_printf("date:%s\r\n", sntpTimeChangeToSimpleDateFormat(time1, &T_sntpdata, time));
+	sntpTimeChangeToSimpleDateFormat(time1, &T_sntpdata, time);
 	sntpTupdate = SntpdataUpadte(&sntpdata, T_sntpdata);
 //	sntpdata.hour = T_sntpdata.hour;
 //	sntpdata.minute = T_sntpdata.minute;
@@ -339,15 +338,15 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 		os_timer_setfn(&user_timer, sntp_read_timer_callback2, NULL);
 		os_timer_arm(&user_timer, 1000, 1);
 		wifi_get_ip_info(STATION_IF,&user_ip);		//while connect success, get ip info
-
+		tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
 //		os_timer_disarm(&send_data_timer);
 //		os_timer_setfn(&send_data_timer, (os_timer_func_t *) GET_WeatherData,NULL);
 //		os_timer_arm(&send_data_timer, 2000, true);
 #if   TCP_CLIENT
 		tcp_client_init(&tcp_client,TCP_SERVER_IP, &user_ip.ip,TCP_SERVER_PORT);
-		os_timer_disarm(&send_data_timer);
-		os_timer_setfn(&send_data_timer, (os_timer_func_t *) TCP_Send_data,NULL);
-		os_timer_arm(&send_data_timer, 2000, true);
+//		os_timer_disarm(&send_data_timer);
+//		os_timer_setfn(&send_data_timer, (os_timer_func_t *) TCP_Send_data,NULL);
+//		os_timer_arm(&send_data_timer, 2000, true);
 #elif TCP_SERVER
 		tcp_server_init(tcp_server,TCP_LOCAL_PORT);
 		os_timer_disarm(&send_data_timer);
@@ -418,22 +417,20 @@ Main_loop() {
 	//LCD_ShowString(10,30,"2.2 inch TFT 240*320");
 	if(mcu_status == mcu_WIFI_Success) {
 		if (local_tick%5 == 0) {
-			tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
+			weatherData.update = 0;
+			if (weather_tcp.state == ESPCONN_CLOSE) {
+				os_printf("connect again\r\n");
+				espconn_connect(&weather_tcp);
+			}
+
+			//tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
 			os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
 			tcp_client_send_data(&weather_tcp,messages_send_buffer,strlen(messages_send_buffer));
 		}
 	}
 	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
-	if (weatherData.update) {
-		weatherData.update = 0;
-		os_printf("clouds:%d, code:%d, humidity:%d, pressure:%dPa, Temp:%dC\r\n", weatherData.clouds, weatherData.code,
-										weatherData.humidity, weatherData.pressure,
-										weatherData.temperature);
-		os_printf("local_name:%s, local_country:%s, last_time:%s\r\n", weatherData.local_name,
-																	   weatherData.local_country,
-																	   weatherData.last_update);
-	}
+	DisplayWeatherInfo(&weatherData);
 
 }
 
@@ -478,8 +475,10 @@ user_init(void)
     weatherDataInit(&weatherData);
     Lcd_Init();
     LCD_Clear(BLACK);
+    if (!bootanimation(LCD_W/2-40, LCD_H/2-2, 80, 0xfc60))
+    	mcu_status == mcu_BootanimationEnd;
     //LCD_ShowString(10,30,"2.2 inch TFT 240*320");
-    //showimage();
+    //MLCD_ShowImage(LCD_W/2-16, LCD_H/2-40, 32, 32,NULL) ;
     //spi_interface_test();
     //LCD_fillScreen(BLUE);
     //LCD_Clear(WHITE);
@@ -488,4 +487,7 @@ user_init(void)
 	os_timer_disarm(&user_loop_timer);
 	os_timer_setfn(&user_loop_timer, (os_timer_func_t *) Main_loop,NULL);
 	os_timer_arm(&user_loop_timer, 1000, true);
+//	while(1) {
+//		system_soft_wdt_feed();
+//	}
 }

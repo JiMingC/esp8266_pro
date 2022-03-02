@@ -43,5 +43,7 @@ typedef struct weatherData_t
 void tcp_weather_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_ip, int remote_port) ;
 sint8 weather_client_send_data(struct espconn *espconn,uint8 *pdata,uint16 length);
 void weatherDataInit(WeatherData_t * wdata);
+uint8 weather_codeparse(u8 code);
+void DisplayWeatherInfo(WeatherData_t * wdata);
 //void TCP_Send_data(struct espconn *espconn);
 #endif /* APP_INCLUDE_USER_TCPSERVERH_ */

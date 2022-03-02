@@ -71,6 +71,7 @@ void LCD_WriteHalfWord(u16 dat16);
 void LCD_Writ_Bus(u8 da);
 
 void LCD_DrawPoint(u16 x,u16 y);//
+void LCD_DrawPointColor(u16 x,u16 y, u16 color);
 void LCD_DrawPoint_big(u16 x,u16 y);//
 u16  LCD_ReadPoint(u16 x,u16 y); //
 void Draw_Circle(u16 x0,u16 y0,u8 r);
@@ -93,6 +94,10 @@ void xianshi();
 
 void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base);
 void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base);
+void MLCD_ShowImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
+void MLCD_ShowWeahterImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
 u8 GetXfromFontssize(u8 fonts_base);
 u8 GetYfromFontssize(u8 fonts_base);
+
+
 #endif /* APP_INCLUDE_USER_LCD_H_ */
