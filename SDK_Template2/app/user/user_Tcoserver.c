@@ -1,29 +1,56 @@
 #include "../include/user_TcpServer.h"
-
+#include "user_Msghandler.h"
+#include "typedef.h"
 /**********************************
  *   TCP CLIENT STATIC VARIABLES  *
  **********************************/
-
+net_message_t *srcNetMsg;
+extern u16 net_id;
+extern char NetMsgBuff[];
+extern struct espconn tcp_client;
 /**********************************
  *   TCP CLIENT STATIC FUNCTIONS  *
  **********************************/
 
+LOCAL void ICACHE_FLASH_ATTR
+tcp_NetMsghandler(net_message_t *pstNetMsg){
+	switch (pstNetMsg->enOpcode) {
+		case EN_MSG_GIVE_USRID:
+			net_id = pstNetMsg->body[0] << 8 | pstNetMsg->body[1];
+			break;
+		case EN_MSG_SINGLE_SEND:
+			os_printf("recv from 0x%x:%s\n", pstNetMsg->netId, pstNetMsg->body);
+			os_memcpy(NetMsgBuff, pstNetMsg->body, pstNetMsg->body_len - 1);
+			break;
+		default:
+			break;
+	}
+	char buf[6];
+	netreplyNetMsg(pstNetMsg->enOpcode, buf);
+	tcp_client_send_data(&tcp_client, buf,6);
+}
+
 /**
  * TCP Client数据发送回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 tcp_client_sent_cb(void *arg){
-	os_printf("tcp client send data successful\r\n");
+	LOGD("tcp client send data successful\r\n");
 }
 
 /**
  * TCP Client数据接收回调函数，可以在这处理收到Server发来的数据
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
+#ifdef DEBUG
 	os_printf("tcp client receive tcp server data\r\n");
 	os_printf("length: %d \r\ndata: %s\r\n",len,pdata);
-
+#endif
+	srcNetMsg = (net_message_t *)os_calloc(1,NET_MESSAGE_MAX_LENGTH);
+	netparseMsg(srcNetMsg, pdata);
+	tcp_NetMsghandler(srcNetMsg);
+	os_free(srcNetMsg);
 	//TO DO
 
 	/**
@@ -34,7 +61,7 @@ tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
 /**
  * TCP Client重连回调函数，可以在此函数里做重连接处理
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 tcp_client_recon_cb(void *arg,sint8 error){
 	os_printf("tcp client connect tcp server error %d\r\n",error);
 }
@@ -42,7 +69,7 @@ tcp_client_recon_cb(void *arg,sint8 error){
 /**
  * TCP Client断开连接回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 tcp_client_discon_cb(void *arg){
 	os_printf("tcp client disconnect tcp server successful\r\n");
 }
@@ -50,7 +77,7 @@ tcp_client_discon_cb(void *arg){
 /**
  * TCP Client连接成功回调函数
  */
-static void ICACHE_FLASH_ATTR
+LOCAL void ICACHE_FLASH_ATTR
 tcp_client_connect_cb(void *arg){
 	struct espconn *pespconn = arg;
 

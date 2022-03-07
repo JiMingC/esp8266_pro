@@ -20,7 +20,7 @@
 #define TCP_SERVER_IP    "175.178.82.209"//TCP server IP
 //#define TCP_SERVER_IP    "192.168.1.101"//TCP server IP,it is according your TCP server PC or device IP
 #define TCP_SERVER_PORT  7070
-#define TCP_LOCAL_PORT	 8888
+#define TCP_LOCAL_PORT	 7878
 
 #define WEATHER_SERVER	"116.62.81.138"
 #define WEATHER_PORT	 80

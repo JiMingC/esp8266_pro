@@ -83,7 +83,7 @@ parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_sent_cb(void *arg){
-	os_printf("tcp client send data successful\r\n");
+	os_printf("weather client send data successful\r\n");
 }
 
 /**
@@ -91,9 +91,10 @@ weather_client_sent_cb(void *arg){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_recv_cb(void *arg,char *pdata,unsigned short len){
-	os_printf("tcp client receive tcp server data\r\n");
+#ifdef DEBUG
+	os_printf("weather client receive tcp server data\r\n");
 	os_printf("length: %d \r\ndata: %s\r\n",len,pdata);
-
+#endif
 	//TO DO
 
 	/**
@@ -107,7 +108,7 @@ weather_client_recv_cb(void *arg,char *pdata,unsigned short len){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_recon_cb(void *arg,sint8 error){
-	os_printf("tcp client connect tcp server error %d\r\n",error);
+	os_printf("weather client connect tcp server error %d\r\n",error);
 }
 
 /**
@@ -149,7 +150,7 @@ tcp_weather_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_
 	os_memcpy(espconn->proto.tcp->remote_ip,&server_ip,4);//设置要连接的Server IP地址
 	espconn->proto.tcp->remote_port = remote_port;//设置要连接的Server 端口号
 	os_memcpy(espconn->proto.tcp->local_ip,local_ip,4);//设置本地IP地址
-	espconn->proto.tcp->local_port = TCP_LOCAL_PORT;//设置本地端口号
+	espconn->proto.tcp->local_port = WEATHER_LOCAL_PORT;//设置本地端口号
 
 	espconn_regist_connectcb(espconn,weather_client_connect_cb);//注册连接成功回调函数
 	espconn_regist_reconcb(espconn,weather_client_recon_cb);//注册断连重新连接回调函数
@@ -169,20 +170,6 @@ weather_client_send_data(struct espconn *espconn,uint8 *pdata,uint16 length){
     }
     espconn_send(espconn,pdata,length);
 }
-
-//LOCAL uint8  messages_send_buffer[50];
-//LOCAL uint16 messages_send_count = 0;
-//void ICACHE_FLASH_ATTR
-//TCP_Send_data(struct espconn *espconn){
-//#if   TCP_CLIENT
-//	os_sprintf(messages_send_buffer,"hi this is ESP8266 TCP client![%d]\r\n",messages_send_count);
-//	tcp_client_send_data(espconn,messages_send_buffer,strlen(messages_send_buffer));
-//#elif TCP_SERVER
-//	os_sprintf(messages_send_buffer,"hi this is ESP8266 TCP server![%d]\r\n",messages_send_count);
-//	tcp_server_send_data(tcp_server,messages_send_buffer,strlen(messages_send_buffer));
-//#endif
-//	messages_send_count++;
-//}
 
 uint8 ICACHE_FLASH_ATTR
 weather_codeparse(u8 code){

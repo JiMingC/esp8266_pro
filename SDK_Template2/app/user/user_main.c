@@ -37,6 +37,7 @@
 #include "user_sntp.h"
 #include "user_TcpServer.h"
 #include "user_WeatherServer.h"
+#include "user_Msghandler.h"
 #include "user_lcd.h"
 #include "spi_test.h"
 
@@ -109,6 +110,8 @@ LOCAL struct ip_info user_ip;
 LOCAL SntpData_t sntpdata;
 LOCAL u8 sntpTupdate = 0xFF;
 WeatherData_t weatherData;
+u16 net_id;
+char NetMsgBuff[100];
 
 LOCAL u8 mcu_status = 0;
 
@@ -234,8 +237,14 @@ LOCAL uint16 messages_send_count = 0;
 void ICACHE_FLASH_ATTR
 TCP_Send_data() {
 #if   TCP_CLIENT
-	os_sprintf(messages_send_buffer,"hi this is ESP8266 TCP client![%d]\r\n",messages_send_count);
-	tcp_client_send_data(&tcp_client,messages_send_buffer,strlen(messages_send_buffer));
+	if (tcp_client.state == ESPCONN_CLOSE) {
+		os_printf("tcp client connect again\r\n");
+		espconn_connect(&tcp_client);
+	} else if (tcp_client.state == ESPCONN_CONNECT) {
+		char buf[6];
+		netenOpcodeNetMsg(EN_MSG_HEARTBEAT, buf);
+		tcp_client_send_data(&tcp_client, buf,6);
+	}
 #elif TCP_SERVER
 	os_sprintf(messages_send_buffer,"hi this is ESP8266 TCP server![%d]\r\n",messages_send_count);
 	tcp_server_send_data(tcp_server,messages_send_buffer,strlen(messages_send_buffer));
@@ -339,14 +348,12 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 		os_timer_arm(&user_timer, 1000, 1);
 		wifi_get_ip_info(STATION_IF,&user_ip);		//while connect success, get ip info
 		tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
-//		os_timer_disarm(&send_data_timer);
-//		os_timer_setfn(&send_data_timer, (os_timer_func_t *) GET_WeatherData,NULL);
-//		os_timer_arm(&send_data_timer, 2000, true);
+
 #if   TCP_CLIENT
 		tcp_client_init(&tcp_client,TCP_SERVER_IP, &user_ip.ip,TCP_SERVER_PORT);
-//		os_timer_disarm(&send_data_timer);
-//		os_timer_setfn(&send_data_timer, (os_timer_func_t *) TCP_Send_data,NULL);
-//		os_timer_arm(&send_data_timer, 2000, true);
+		os_timer_disarm(&send_data_timer);
+		os_timer_setfn(&send_data_timer, (os_timer_func_t *) TCP_Send_data,NULL);
+		os_timer_arm(&send_data_timer, 3000, true);
 #elif TCP_SERVER
 		tcp_server_init(tcp_server,TCP_LOCAL_PORT);
 		os_timer_disarm(&send_data_timer);
@@ -409,28 +416,23 @@ Main_loop() {
 	local_tick++;
 	if (local_tick > 1000)
 		local_tick = 0;
-	//LCD_Clear(color_rand);
-	//color_rand += 0xF;
-	//LCD_ShowString(LCD_W/2 - 10, LCD_H/2 - 10 ,"hello kogwejun");
-	//LCD_DrawRectangle(0, 0, 60, 120);
-	//LCD_ShowChar(10, 10, ' ',0);
-	//LCD_ShowString(10,30,"2.2 inch TFT 240*320");
+
 	if(mcu_status == mcu_WIFI_Success) {
-		if (local_tick%5 == 0) {
+		if (local_tick%100 == 0) {
 			weatherData.update = 0;
 			if (weather_tcp.state == ESPCONN_CLOSE) {
 				os_printf("connect again\r\n");
 				espconn_connect(&weather_tcp);
+			} else if (weather_tcp.state == ESPCONN_CONNECT) {
+				os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
+				weather_client_send_data(&weather_tcp,messages_send_buffer,strlen(messages_send_buffer));
 			}
-
-			//tcp_weather_init(&weather_tcp,WEATHER_SERVER, &user_ip.ip,WEATHER_PORT);
-			os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
-			tcp_client_send_data(&weather_tcp,messages_send_buffer,strlen(messages_send_buffer));
 		}
 	}
 	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
 	DisplayWeatherInfo(&weatherData);
+	DisplayNetMsg(NetMsgBuff);
 
 }
 
@@ -475,7 +477,7 @@ user_init(void)
     weatherDataInit(&weatherData);
     Lcd_Init();
     LCD_Clear(BLACK);
-    if (!bootanimation(LCD_W/2-40, LCD_H/2-2, 80, 0xfc60))
+    if (!bootanimation(LCD_W_HALF-40, LCD_H_HALF-2, 80, 0xfc60))
     	mcu_status == mcu_BootanimationEnd;
     //LCD_ShowString(10,30,"2.2 inch TFT 240*320");
     //MLCD_ShowImage(LCD_W/2-16, LCD_H/2-40, 32, 32,NULL) ;
@@ -486,7 +488,7 @@ user_init(void)
 
 	os_timer_disarm(&user_loop_timer);
 	os_timer_setfn(&user_loop_timer, (os_timer_func_t *) Main_loop,NULL);
-	os_timer_arm(&user_loop_timer, 1000, true);
+	os_timer_arm(&user_loop_timer, 100, true);
 //	while(1) {
 //		system_soft_wdt_feed();
 //	}

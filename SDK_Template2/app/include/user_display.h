@@ -13,6 +13,9 @@
 #include "ets_sys.h"
 #include "osapi.h"
 
+#define LCD_H_HALF	LCD_H/2
+#define LCD_W_HALF	LCD_W/2
+
 enum mcu_status{
 	mcu_Normal = 0,
 	mcu_WIFI_Scan,
@@ -29,5 +32,6 @@ enum mcu_status{
 void DisplayTime(u8 sntpTupdate,SntpData_t sntpdata);
 void DisplayMcuMessage(u8 mcu_status);
 void DisplayWeatherInfo(WeatherData_t * wdata);
+void DisplayNetMsg(char *NetMsgBuff);
 u8 bootanimation(u8 x, u8 y, u8 len, u16 color);
 #endif /* APP_INCLUDE_USER_DISPLAY_H_ */

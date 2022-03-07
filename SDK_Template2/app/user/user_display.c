@@ -7,10 +7,9 @@
 #include "user_display.h"
 #include "user_lcd.h"
 
-#define LCD_H_HALF	LCD_H/2
-#define LCD_W_HALF	LCD_W/2
 
 #define TimeDisplayT	2
+
 
 LOCAL u8 weathericon[9][2048] = {
 //0：其他
@@ -83,6 +82,8 @@ DisplayTime(u8 sntpTupdate,SntpData_t sntpdata) {
 	os_printf("%d, %d, %d\n",sntpdata.hour, sntpdata.minute, sntpdata.second );
 #elif TimeDisplayT == 2
 	// (1:0804 2:1206 3:1608 4:2412 5:3216)
+	if (sntpTupdate == 0)
+		return;
 	if (sntpTupdate > 1) {
 		MLCD_ShowChar(40, LCD_H_HALF, ':', 5);
 		MLCD_ShowChar(86, LCD_H_HALF + 16, ':', 3);
@@ -98,10 +99,10 @@ DisplayTime(u8 sntpTupdate,SntpData_t sntpdata) {
 		MLCD_Show2Num(10, LCD_H_HALF, sntpdata.hour, 5);
 	sntpTupdate >>= 1;
 	if (sntpTupdate & 0x1)
-		LCD_Show2Num(5, 0, sntpdata.month, 2);
+		LCD_Show2Num(17, 0, sntpdata.day, 2);
 	sntpTupdate >>= 1;
 	if (sntpTupdate & 0x1)
-		LCD_Show2Num(17, 0, sntpdata.day, 2);
+		LCD_Show2Num(5, 0, sntpdata.month, 2);
 #ifdef DEBUG
 	os_printf("%d, %d, %d\n",sntpdata.hour, sntpdata.minute, sntpdata.second );
 #endif
@@ -178,6 +179,19 @@ DisplayWeatherInfo(WeatherData_t * weatherData) {
 
 }
 
+void ICACHE_FLASH_ATTR
+DisplayNetMsg(char *NetMsgBuff) {
+
+	if (NetMsgBuff[0] != '\0') {
+		u8 x = GetXfromFontssize(3);
+		u8 y = GetYfromFontssize(3);
+		LCD_Fill(0, 120, LCD_W, 138, BLACK);
+		os_printf("os_strlen(NetMsgBuff):%d, %s\n", os_strlen(NetMsgBuff), NetMsgBuff);
+		LCD_ShowString(LCD_W/2 - (os_strlen(NetMsgBuff)/2+1)*x,120,NetMsgBuff,3);
+	}
+	os_memset(NetMsgBuff, '\0', 100);
+}
+
 u8 ICACHE_FLASH_ATTR
 bootanimation(u8 x, u8 y, u8 len, u16 color) {
 	LCD_DrawLine(x+1, y, x+len-1, y);
@@ -199,3 +213,5 @@ bootanimation(u8 x, u8 y, u8 len, u16 color) {
 	LCD_Clear(BLACK);
 	return 0;
 }
+
+

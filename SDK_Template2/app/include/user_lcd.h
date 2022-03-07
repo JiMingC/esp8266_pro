@@ -14,6 +14,7 @@
 #include "driver/spi.h"
 #include "gpio.h"
 #include "eagle_soc.h"
+#include "mem.h"
 
 //define lcd size
 #define LCD_W 128
@@ -98,6 +99,7 @@ void MLCD_ShowImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
 void MLCD_ShowWeahterImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
 u8 GetXfromFontssize(u8 fonts_base);
 u8 GetYfromFontssize(u8 fonts_base);
-
+void displayfb(u8 x, u8 y, u8 image_w, u8 image_h);
+void fb_init();
 
 #endif /* APP_INCLUDE_USER_LCD_H_ */
