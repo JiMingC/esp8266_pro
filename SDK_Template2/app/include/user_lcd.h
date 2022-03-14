@@ -97,6 +97,8 @@ void MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base);
 void MLCD_ShowChar(u16 x,u16 y,u8 num,u8 fonts_base);
 void MLCD_ShowImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
 void MLCD_ShowWeahterImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
+void MLCD_ShowBuf(u16 x1,u16 y1,u16 x2, u16 y2, u8 *p);
+void MLCD_ShowTFTImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]);
 u8 GetXfromFontssize(u8 fonts_base);
 u8 GetYfromFontssize(u8 fonts_base);
 void displayfb(u8 x, u8 y, u8 image_w, u8 image_h);

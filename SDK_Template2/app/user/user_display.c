@@ -6,6 +6,7 @@
  */
 #include "user_display.h"
 #include "user_lcd.h"
+#include "user_Msghandler.h"
 
 
 #define TimeDisplayT	2
@@ -182,16 +183,56 @@ DisplayWeatherInfo(WeatherData_t * weatherData) {
 void ICACHE_FLASH_ATTR
 DisplayNetMsg(char *NetMsgBuff) {
 
-	if (NetMsgBuff[0] != '\0') {
+//	if (NetMsgBuff[0] != '\0') {
 		u8 x = GetXfromFontssize(3);
 		u8 y = GetYfromFontssize(3);
 		LCD_Fill(0, 120, LCD_W, 138, BLACK);
 		os_printf("os_strlen(NetMsgBuff):%d, %s\n", os_strlen(NetMsgBuff), NetMsgBuff);
 		LCD_ShowString(LCD_W/2 - (os_strlen(NetMsgBuff)/2+1)*x,120,NetMsgBuff,3);
-	}
-	os_memset(NetMsgBuff, '\0', 100);
+//	}
+//	os_memset(NetMsgBuff, '\0', 100);
 }
 
+void ICACHE_FLASH_ATTR
+DisplayNetTFT(u8 *NetMsgBuff) {
+//	if (NetMsgBuff[0] != '\0') {
+		int image_w, image_h, len;
+		image_w = NetMsgBuff[2] | NetMsgBuff[3] << 8;
+		image_h = NetMsgBuff[4] | NetMsgBuff[5] << 8;
+		len = NetMsgBuff[6] | NetMsgBuff[7] << 8;
+		len =+ 16;
+//		os_printf("0:0x%x\n", NetMsgBuff[0]);
+//		os_printf("1:0x%x\n", NetMsgBuff[1]);
+//		os_printf("2:0x%x\n", NetMsgBuff[2]);
+//		os_printf("3:0x%x\n", NetMsgBuff[3]);
+//		os_printf("4:0x%x\n", NetMsgBuff[4]);
+//		os_printf("5:0x%x\n", NetMsgBuff[5]);
+//		os_printf("6:0x%x\n", NetMsgBuff[6]);
+//		os_printf("7:0x%x\n", NetMsgBuff[7]);
+//		for(int tmp = 0; tmp < len; tmp++) {
+//			os_printf("tftbuf(%d)0x%x\n", tmp , NetMsgBuff[tmp]);
+//		}
+		LCD_Fill(0, 120, LCD_W, 138, BLACK);
+
+		os_printf("len:%d\n", len);
+		//MLCD_ShowBuf(LCD_W/2 - len/16*4, 120, len/16*8, 16, NetMsgBuff);
+		MLCD_ShowTFTImage(LCD_W/2 - image_w/2, 120, image_w, image_h, NetMsgBuff+16);
+
+//	}
+//	os_memset(NetMsgBuff, '\0', MSGBUF_MAX);
+}
+
+
+void DisplayNetBuf(u8 *NetMsgBuff) {
+	if (NetMsgBuff[0] != '\0') {
+		if (NetMsgBuff[0] < 0x80) {
+			DisplayNetMsg(NetMsgBuff);
+		} else {
+			DisplayNetTFT(NetMsgBuff);
+		}
+	}
+	os_memset(NetMsgBuff, '\0', MSGBUF_MAX);
+}
 u8 ICACHE_FLASH_ATTR
 bootanimation(u8 x, u8 y, u8 len, u16 color) {
 	LCD_DrawLine(x+1, y, x+len-1, y);

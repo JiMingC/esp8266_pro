@@ -111,8 +111,8 @@ LOCAL SntpData_t sntpdata;
 LOCAL u8 sntpTupdate = 0xFF;
 WeatherData_t weatherData;
 u16 net_id;
-char NetMsgBuff[100];
-
+u8 NetMsgBuff[MSGBUF_MAX];
+extern net_message_t *srcNetMsg;
 LOCAL u8 mcu_status = 0;
 
 #if   TCP_CLIENT
@@ -432,7 +432,8 @@ Main_loop() {
 	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
 	DisplayWeatherInfo(&weatherData);
-	DisplayNetMsg(NetMsgBuff);
+	DisplayNetBuf(NetMsgBuff);
+
 
 }
 

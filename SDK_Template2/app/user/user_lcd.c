@@ -1154,7 +1154,7 @@ LCD_DrawPoint(u16 x,u16 y)
 
 	LCD_WR_DATA(POINT_COLOR);
 
-	FrameBufferSet(POINT_COLOR);
+	//FrameBufferSet(POINT_COLOR);
 }
 /******************************************************************************
  * FunctionName : LCD_DrawPoint
@@ -1169,8 +1169,8 @@ LCD_DrawPointColor(u16 x,u16 y, u16 color)
 {
 	Address_set(x,y,x,y);//ÉèÖÃ¹â±êÎ»ÖÃ
 	LCD_WR_DATA(color);
-
-	FrameBufferSet(color);
+//
+//	FrameBufferSet(color);
 }
 /******************************************************************************
  * FunctionName : LCD_DrawPoint_big
@@ -1739,4 +1739,74 @@ MLCD_Show2Num(u16 x,u16 y,u8 num,u8 fonts_base)
 
 void fb_init() {
 	FB = os_malloc(LCD_W*LCD_H*2);
+}
+
+void ICACHE_FLASH_ATTR
+LCD_ShowU8(u16 x, u16 y, u8 dat) {
+	Address_set(x,y,x+8,y);
+
+	if (BACK_COLOR == BLACK && POINT_COLOR == WHITE)
+		POINT_COLOR = WHITE;
+	else if (BACK_COLOR == WHITE && POINT_COLOR == WHITE)
+		POINT_COLOR = BLACK;
+
+	for (u8 i = 0; i < 8; i++) {
+		if (dat & 0x80) {
+			LCD_WR_DATA(POINT_COLOR);
+		}
+		dat <<= 1;
+	}
+}
+
+void ICACHE_FLASH_ATTR
+LCD_ShowU16(u16 x, u16 y, u8 dat) {
+	Address_set(x,y,x+16,y);
+
+	if (BACK_COLOR == BLACK && POINT_COLOR == WHITE)
+		POINT_COLOR = WHITE;
+	else if (BACK_COLOR == WHITE && POINT_COLOR == WHITE)
+		POINT_COLOR = BLACK;
+
+	for (u8 i = 0; i < 16; i++) {
+		if (dat & 0x8000) {
+			LCD_WR_DATA(POINT_COLOR);
+		}
+		dat <<= 1;
+	}
+}
+
+void ICACHE_FLASH_ATTR
+MLCD_ShowBuf(u16 x1,u16 y1,u16 w, u16 h, u8 *p)
+{
+	u8 pos_x = x1;
+    while(*p!='\0')
+    {
+//        if(x>LCD_W-fonts_w){x=0;y+=fonts_h;}
+//        if(y>LCD_H-fonts_h){y=x=0;}
+//        LCD_ShowChar2(x,y,*p,0,size_base);
+//
+//        x+=fonts_w;
+//        p++;
+    	LCD_ShowU8(pos_x, y1, *p);
+    	pos_x +=8;
+    	if (pos_x >= (x1+w-1)) {
+    		y1++;
+    		pos_x = x1;
+    	}
+    	p++;
+    }
+}
+
+void ICACHE_FLASH_ATTR
+MLCD_ShowTFTImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]) //invert
+{
+	int i;
+	Address_set(x,y,x+image_w-1,y+image_h-1);		//×ø±êÉèÖÃ
+	int point_total = image_w * image_h;
+	for(i=0;i< point_total; i++)
+	{
+		LCD_WR_DATA8(buf[(i)*2]);	 //·¢ËÍÑÕÉ«Êý¾Ý
+		LCD_WR_DATA8(buf[(i)*2+1]);
+
+	}
 }

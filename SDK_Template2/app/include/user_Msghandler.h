@@ -12,8 +12,10 @@
 #include "mem.h"
 #include "os_type.h"
 
+#define MSGBUF_MAX			512*10
+
 #define NET_MESSAGE_BODY_MAX_LENGTH 128
-#define NET_MESSAGE_MAX_LENGTH      135
+#define NET_MESSAGE_MAX_LENGTH      4096
 #define NET_MESSAGE_HEAD_LEN        8
 
 #define NET_MESSAGE_INFO_LEN        32
@@ -31,6 +33,7 @@ typedef enum
 	EN_MSG_SINGLE_SEND			  = 0x2,
 	EN_MSG_SINGLE_SEND_REPLY      = 0x3,
     EN_MSG_GIVE_USRID             = 0x10,
+	EN_MSG_ESP_TFTSHOW			  = 0x12,
     EN_MSG_GET_USRNAME            = 0x78,
     EN_MSG_GIVE_USRNAME           = 0x79,
     EN_MSG_NONE                   = 0xff,

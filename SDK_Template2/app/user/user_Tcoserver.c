@@ -6,7 +6,7 @@
  **********************************/
 net_message_t *srcNetMsg;
 extern u16 net_id;
-extern char NetMsgBuff[];
+extern u8 NetMsgBuff[];
 extern struct espconn tcp_client;
 /**********************************
  *   TCP CLIENT STATIC FUNCTIONS  *
@@ -21,6 +21,9 @@ tcp_NetMsghandler(net_message_t *pstNetMsg){
 		case EN_MSG_SINGLE_SEND:
 			os_printf("recv from 0x%x:%s\n", pstNetMsg->netId, pstNetMsg->body);
 			os_memcpy(NetMsgBuff, pstNetMsg->body, pstNetMsg->body_len - 1);
+			break;
+		case EN_MSG_ESP_TFTSHOW:
+			os_memcpy(NetMsgBuff, pstNetMsg->body, pstNetMsg->body_len);
 			break;
 		default:
 			break;
@@ -41,16 +44,33 @@ tcp_client_sent_cb(void *arg){
 /**
  * TCP Client数据接收回调函数，可以在这处理收到Server发来的数据
  */
+LOCAL int recv_pos = 0;
+LOCAL int recv_t_len = 0;
+LOCAL u8* recv_pdata;
 LOCAL void ICACHE_FLASH_ATTR
 tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
-#ifdef DEBUG
+#if 1
 	os_printf("tcp client receive tcp server data\r\n");
 	os_printf("length: %d \r\ndata: %s\r\n",len,pdata);
 #endif
-	srcNetMsg = (net_message_t *)os_calloc(1,NET_MESSAGE_MAX_LENGTH);
-	netparseMsg(srcNetMsg, pdata);
-	tcp_NetMsghandler(srcNetMsg);
-	os_free(srcNetMsg);
+	os_printf("%d %d\n", recv_pos, recv_t_len);
+	if (recv_pos == 0) {
+		recv_t_len = ((pdata[6] << 8 | pdata[7]) + 8);
+	}
+	os_memcpy(recv_pdata + recv_pos, pdata, len);
+	if (len >= (recv_t_len - recv_pos)) {
+		recv_pos = 0;
+		recv_t_len = 0;
+	} else {
+		recv_pos += len;
+	}
+	if (recv_pos == 0) {
+		srcNetMsg = (net_message_t *)os_calloc(1,NET_MESSAGE_MAX_LENGTH);
+		netparseMsg(srcNetMsg, recv_pdata);
+		tcp_NetMsghandler(srcNetMsg);
+		os_free(srcNetMsg);
+	}
+
 	//TO DO
 
 	/**
@@ -72,6 +92,8 @@ tcp_client_recon_cb(void *arg,sint8 error){
 LOCAL void ICACHE_FLASH_ATTR
 tcp_client_discon_cb(void *arg){
 	os_printf("tcp client disconnect tcp server successful\r\n");
+	recv_pos = 0;
+	recv_t_len = 0;
 }
 
 /**
@@ -111,6 +133,7 @@ tcp_client_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_i
 	espconn_regist_reconcb(espconn,tcp_client_recon_cb);//注册断连重新连接回调函数
 
 	espconn_connect(espconn);//Client连接Server
+	recv_pdata = (u8*)os_calloc(1,NET_MESSAGE_MAX_LENGTH);
 }
 
 /**********************************

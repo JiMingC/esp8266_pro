@@ -33,5 +33,7 @@ void DisplayTime(u8 sntpTupdate,SntpData_t sntpdata);
 void DisplayMcuMessage(u8 mcu_status);
 void DisplayWeatherInfo(WeatherData_t * wdata);
 void DisplayNetMsg(char *NetMsgBuff);
+void DisplayNetTFT(u8 *NetMsgBuff);
+void DisplayNetBuf(u8 *NetMsgBuff);
 u8 bootanimation(u8 x, u8 y, u8 len, u16 color);
 #endif /* APP_INCLUDE_USER_DISPLAY_H_ */
