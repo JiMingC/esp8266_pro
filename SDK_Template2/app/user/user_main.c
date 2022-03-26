@@ -39,7 +39,9 @@
 #include "user_WeatherServer.h"
 #include "user_Msghandler.h"
 #include "user_lcd.h"
+#include "driver/gpio16.h"
 #include "spi_test.h"
+#include "typedef.h"
 
 #define DEVICE_TYPE 		"gh_9e2cff3dfa51" //wechat public number
 #define DEVICE_ID 			"122475" //model ID
@@ -342,7 +344,7 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 	status = wifi_station_get_connect_status(); //
 	if(status == STATION_GOT_IP){ //
 		mcu_status = mcu_WIFI_Success;
-		os_printf("wi_fi connect.\r\n");
+		LOGD("wi_fi connect.\r\n");
 		os_timer_disarm(&user_timer);
 		os_timer_setfn(&user_timer, sntp_read_timer_callback2, NULL);
 		os_timer_arm(&user_timer, 1000, 1);
@@ -368,10 +370,10 @@ void ICACHE_FLASH_ATTR wifi_check(void *arg){
 		return;
 	}else{
 		mcu_status = mcu_WIFI_Reconnect;
-		os_printf("wi_fi connect[%d].\r\n", count);
+		LOGD("wi_fi connect[%d].\r\n", count);
 		if(count > 7){ //
 			mcu_status = mcu_WIFI_Fail;
-			os_printf("wi_fi connect fail.\r\n");
+			LOGD("wi_fi connect fail.\r\n");
 			smartconfig_start(smartconfig_done);
 			return;
 		}
@@ -383,21 +385,21 @@ LOCAL void ICACHE_FLASH_ATTR
 user_scan_done(void *arg, STATUS status) {
 	if (status == OK) {
 		mcu_status = mcu_WIFI_Scan;
-        os_printf("SCAN_STATUS_LINK\n"); //
+		LOGD("SCAN_STATUS_LINK\n"); //
 
         wifi_station_set_config(&s_staconf);
         wifi_station_disconnect();
         if (wifi_station_connect()) {
-			os_printf("SCAN_STATUS_connect SUCCESS\n");
+        	LOGD("SCAN_STATUS_connect SUCCESS\n");
 			os_timer_disarm(&user_timer);
 			os_timer_setfn(&user_timer, wifi_check, NULL);
 			os_timer_arm(&user_timer, 2000, 0);
         } else {
-			os_printf("SCAN_STATUS_CONNECT FAIL\n");
+        	LOGD("SCAN_STATUS_CONNECT FAIL\n");
 			smartconfig_start(smartconfig_done);
         }
 	} else {
-		os_printf("connect time out, start smart_cfg\n");
+		LOGD("connect time out, start smart_cfg\n");
 		smartconfig_start(smartconfig_done);
 	}
 }
@@ -405,7 +407,7 @@ user_scan_done(void *arg, STATUS status) {
 void ICACHE_FLASH_ATTR user_pre_init(void)
 {
     if(!system_partition_table_regist(at_partition_table, sizeof(at_partition_table)/sizeof(at_partition_table[0]),SPI_FLASH_SIZE_MAP)) {
-		os_printf("system_partition_table_regist fail\r\n");
+    	LOGD("system_partition_table_regist fail\r\n");
 		while(1);
 	}
 }
@@ -413,6 +415,7 @@ LOCAL u16 color_rand;
 LOCAL u16 local_tick = 0;
 void ICACHE_FLASH_ATTR
 Main_loop() {
+	LOCAL u8 slide_en = 0;
 	local_tick++;
 	if (local_tick > 1000)
 		local_tick = 0;
@@ -421,7 +424,7 @@ Main_loop() {
 		if (local_tick%100 == 0) {
 			weatherData.update = 0;
 			if (weather_tcp.state == ESPCONN_CLOSE) {
-				os_printf("connect again\r\n");
+				LOGD("connect again\r\n");
 				espconn_connect(&weather_tcp);
 			} else if (weather_tcp.state == ESPCONN_CONNECT) {
 				os_sprintf(messages_send_buffer,"GET https://api.seniverse.com/v3/weather/now.json?key=SK1luSv8eSU0y_L-w&location=zhongshan&language=en&unit=c\r\n",messages_send_count);
@@ -432,7 +435,9 @@ Main_loop() {
 	DisplayMcuMessage(mcu_status);
 	DisplayTime(sntpTupdate, sntpdata);
 	DisplayWeatherInfo(&weatherData);
-	DisplayNetBuf(NetMsgBuff);
+	if (!slide_en || (local_tick%2 == 0)) {
+		slide_en = DisplayNetBuf(NetMsgBuff);
+	}
 
 
 }
@@ -455,7 +460,7 @@ user_init(void)
 	uart_init(115200, 115200);
 	char buf[128] = {0};
 	os_sprintf(buf,"compile time:"__DATE__" "__TIME__);
-	os_printf("SDK version:%s\n", system_get_sdk_version());
+	LOGD("SDK version:%s\n", system_get_sdk_version());
 	//
 	smartconfig_set_type(U_SC_TYPE); //SC_TYPE_ESPTOUCH,SC_TYPE_AIRKISS,SC_TYPE_ESPTOUCH_AIRKISS
 
@@ -478,6 +483,9 @@ user_init(void)
     weatherDataInit(&weatherData);
     Lcd_Init();
     LCD_Clear(BLACK);
+    gpio16_output_conf();
+    gpio16_output_set(0);
+
     if (!bootanimation(LCD_W_HALF-40, LCD_H_HALF-2, 80, 0xfc60))
     	mcu_status == mcu_BootanimationEnd;
     //LCD_ShowString(10,30,"2.2 inch TFT 240*320");

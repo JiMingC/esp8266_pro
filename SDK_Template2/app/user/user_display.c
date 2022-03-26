@@ -193,46 +193,122 @@ DisplayNetMsg(char *NetMsgBuff) {
 //	os_memset(NetMsgBuff, '\0', 100);
 }
 
+u8 TFTSlidebuf[2*6*16+10];
+u16 slide_idx = 0;
+u8 slide_dst = 0; //0:right  1:left
 void ICACHE_FLASH_ATTR
-DisplayNetTFT(u8 *NetMsgBuff) {
-//	if (NetMsgBuff[0] != '\0') {
-		int image_w, image_h, len;
-		image_w = NetMsgBuff[2] | NetMsgBuff[3] << 8;
-		image_h = NetMsgBuff[4] | NetMsgBuff[5] << 8;
-		len = NetMsgBuff[6] | NetMsgBuff[7] << 8;
-		len =+ 16;
-//		os_printf("0:0x%x\n", NetMsgBuff[0]);
-//		os_printf("1:0x%x\n", NetMsgBuff[1]);
-//		os_printf("2:0x%x\n", NetMsgBuff[2]);
-//		os_printf("3:0x%x\n", NetMsgBuff[3]);
-//		os_printf("4:0x%x\n", NetMsgBuff[4]);
-//		os_printf("5:0x%x\n", NetMsgBuff[5]);
-//		os_printf("6:0x%x\n", NetMsgBuff[6]);
-//		os_printf("7:0x%x\n", NetMsgBuff[7]);
-//		for(int tmp = 0; tmp < len; tmp++) {
-//			os_printf("tftbuf(%d)0x%x\n", tmp , NetMsgBuff[tmp]);
-//		}
-		LCD_Fill(0, 120, LCD_W, 138, BLACK);
+FullSlideBuff(u8 *NetMsgBuff, u16 slide_idx, u16 total_w) {
+	u16 u8_num_h = total_w/8;
+	u8 point8_1 = 0;
+	u8 point8_2 = 0;
+	u16 offset = 0;
+	u32 len = 16 * 6 * 2;
+	TFTSlidebuf[0] = 0xab;
+	TFTSlidebuf[1] = 0x1;
+	TFTSlidebuf[2] = 96;
+	TFTSlidebuf[3] = 96 >> 8;
+	TFTSlidebuf[4] = 16;
+	TFTSlidebuf[5] = 0;
+	TFTSlidebuf[6] = len;				//len: without headerinfo size, (u8)
+	TFTSlidebuf[7] = len >> 8;
+	TFTSlidebuf[8] = 0x0;
+	TFTSlidebuf[9] = 0x0;
+	TFTSlidebuf[10] = 0x0;
+	TFTSlidebuf[11] = 0x0;
+	TFTSlidebuf[12] = 0x0;
+	TFTSlidebuf[13] = 0x0;
+	TFTSlidebuf[14] = 0x0;
+	TFTSlidebuf[15] = 0x0;
 
-		os_printf("len:%d\n", len);
-		//MLCD_ShowBuf(LCD_W/2 - len/16*4, 120, len/16*8, 16, NetMsgBuff);
-		MLCD_ShowTFTImage(LCD_W/2 - image_w/2, 120, image_w, image_h, NetMsgBuff+16);
+	os_memset(TFTSlidebuf, 0 , 2*6*16+10);
 
-//	}
-//	os_memset(NetMsgBuff, '\0', MSGBUF_MAX);
-}
-
-
-void DisplayNetBuf(u8 *NetMsgBuff) {
-	if (NetMsgBuff[0] != '\0') {
-		if (NetMsgBuff[0] < 0x80) {
-			DisplayNetMsg(NetMsgBuff);
-		} else {
-			DisplayNetTFT(NetMsgBuff);
+	for (u16 i = 0; i < 16; i++) {
+		for (u16 j = 0; j < 12; j++) {
+			offset = j + i*u8_num_h + 16 + slide_idx / 8;
+			if (slide_idx <= total_w - 96) {
+				point8_1 = NetMsgBuff[offset];
+				point8_2 = NetMsgBuff[offset + 1];
+			}
+//			else if (slide_idx < total_w) {
+//				point8_1 = NetMsgBuff[offset];
+//				point8_2 = 0x0000;
+//			}
+			else {
+				point8_1 = 0x0000;
+				point8_2 = 0x0000;
+			}
+			TFTSlidebuf[j + i*12 + 16] = (point8_1 << (slide_idx%8)) | (point8_2 >> (8-slide_idx%8)) ;
 		}
 	}
-	os_memset(NetMsgBuff, '\0', MSGBUF_MAX);
 }
+
+u8 ICACHE_FLASH_ATTR
+DisplayNetTFT(u8 *NetMsgBuff) {
+	int image_w, image_h, len;
+	u8 ret = 0;
+	image_w = NetMsgBuff[2] | NetMsgBuff[3] << 8;
+	image_h = NetMsgBuff[4] | NetMsgBuff[5] << 8;
+	len = NetMsgBuff[6] | NetMsgBuff[7] << 8;
+	len =+ 16;
+	//LCD_Fill(0, 120, LCD_W, 138, BLACK);
+//	os_printf("0:0x%x\n", NetMsgBuff[0]);
+//	os_printf("1:0x%x\n", NetMsgBuff[1]);
+//	os_printf("2:0x%x\n", NetMsgBuff[2]);
+//	os_printf("3:0x%x\n", NetMsgBuff[3]);
+//	os_printf("4:0x%x\n", NetMsgBuff[4]);
+//	os_printf("5:0x%x\n", NetMsgBuff[5]);
+//	os_printf("6:0x%x\n", NetMsgBuff[6]);
+//	os_printf("7:0x%x\n", NetMsgBuff[7]);
+	if (NetMsgBuff[0] == 0xaa) {
+		LCD_Fill(0, 120, LCD_W, 138, BLACK);
+		MLCD_ShowTFTImage(LCD_W/2 - image_w/2, 120, image_w, image_h, NetMsgBuff+16);
+	} else if (NetMsgBuff[0] == 0xab) {
+		if (image_w <= 6*16) {
+			LCD_Fill(0, 120, LCD_W, 138, BLACK);
+			MLCD_ShowTFTImage_cp(LCD_W/2 - image_w/2, 120, image_w, image_h, NetMsgBuff+16);
+		} else {
+			if (NetMsgBuff[1] == 0) {
+				NetMsgBuff[1] = 1;
+				slide_idx = 0;
+			}
+			FullSlideBuff(NetMsgBuff, slide_idx, image_w);
+			MLCD_ShowTFTImage_cp(LCD_W/2 - 96/2, 120, 96, image_h, TFTSlidebuf+16);   // fix display wide 96
+
+			if (slide_idx + 6*16 >= image_w) {
+				slide_dst = 1;
+				slide_idx--;
+			} else if (slide_idx == 0) {
+				slide_dst = 0;
+				slide_idx++;
+			} else {
+				if (slide_dst)
+					slide_idx--;
+				else
+					slide_idx++;
+			}
+			ret = 1;
+		}
+	}
+
+	return ret;
+
+}
+
+
+u8 DisplayNetBuf(u8 *NetMsgBuff) {
+	u8 ret = 0;
+	if (NetMsgBuff[0] != '\0') {
+		if (NetMsgBuff[0] == 0xa0) {			//ascii msg
+			DisplayNetMsg(NetMsgBuff+2);
+		} else {
+			ret = DisplayNetTFT(NetMsgBuff);
+		}
+		if (!ret)
+			os_memset(NetMsgBuff, '\0', MSGBUF_MAX);
+	}
+	return ret;
+}
+
 u8 ICACHE_FLASH_ATTR
 bootanimation(u8 x, u8 y, u8 len, u16 color) {
 	LCD_DrawLine(x+1, y, x+len-1, y);

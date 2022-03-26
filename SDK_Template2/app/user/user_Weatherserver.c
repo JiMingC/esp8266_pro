@@ -83,7 +83,7 @@ parse_weatherJS(char *receiveData,unsigned short len, WeatherData_t * wdata){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_sent_cb(void *arg){
-	os_printf("weather client send data successful\r\n");
+	LOGD("weather client send data successful\r\n");
 }
 
 /**
@@ -108,7 +108,7 @@ weather_client_recv_cb(void *arg,char *pdata,unsigned short len){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_recon_cb(void *arg,sint8 error){
-	os_printf("weather client connect tcp server error %d\r\n",error);
+	LOGD("weather client connect tcp server error %d\r\n",error);
 }
 
 /**
@@ -116,7 +116,7 @@ weather_client_recon_cb(void *arg,sint8 error){
  */
 LOCAL void ICACHE_FLASH_ATTR
 weather_client_discon_cb(void *arg){
-	os_printf("weather client disconnect tcp server successful\r\n");
+	LOGD("weather client disconnect tcp server successful\r\n");
 }
 
 /**
@@ -126,7 +126,7 @@ LOCAL void ICACHE_FLASH_ATTR
 weather_client_connect_cb(void *arg){
 	struct espconn *pespconn = arg;
 
-	os_printf("weather client connect tcp server successful\r\n");
+	LOGD("weather client connect tcp server successful\r\n");
 	espconn_regist_recvcb(pespconn,weather_client_recv_cb);//注册接收数据回调函数
 	espconn_regist_sentcb(pespconn,weather_client_sent_cb);//注册数据发送完成回调函数
 	espconn_regist_disconcb(pespconn,weather_client_discon_cb);//注册断开连接回调函数

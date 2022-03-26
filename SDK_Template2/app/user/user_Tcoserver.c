@@ -19,7 +19,7 @@ tcp_NetMsghandler(net_message_t *pstNetMsg){
 			net_id = pstNetMsg->body[0] << 8 | pstNetMsg->body[1];
 			break;
 		case EN_MSG_SINGLE_SEND:
-			os_printf("recv from 0x%x:%s\n", pstNetMsg->netId, pstNetMsg->body);
+			LOGD("recv from 0x%x:%s\n", pstNetMsg->netId, pstNetMsg->body);
 			os_memcpy(NetMsgBuff, pstNetMsg->body, pstNetMsg->body_len - 1);
 			break;
 		case EN_MSG_ESP_TFTSHOW:
@@ -49,11 +49,11 @@ LOCAL int recv_t_len = 0;
 LOCAL u8* recv_pdata;
 LOCAL void ICACHE_FLASH_ATTR
 tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
-#if 1
+#if 0
 	os_printf("tcp client receive tcp server data\r\n");
 	os_printf("length: %d \r\ndata: %s\r\n",len,pdata);
 #endif
-	os_printf("%d %d\n", recv_pos, recv_t_len);
+	//LOGD("%d %d\n", recv_pos, recv_t_len);
 	if (recv_pos == 0) {
 		recv_t_len = ((pdata[6] << 8 | pdata[7]) + 8);
 	}
@@ -83,7 +83,7 @@ tcp_client_recv_cb(void *arg,char *pdata,unsigned short len){
  */
 LOCAL void ICACHE_FLASH_ATTR
 tcp_client_recon_cb(void *arg,sint8 error){
-	os_printf("tcp client connect tcp server error %d\r\n",error);
+	LOGD("tcp client connect tcp server error %d\r\n",error);
 }
 
 /**
@@ -91,7 +91,7 @@ tcp_client_recon_cb(void *arg,sint8 error){
  */
 LOCAL void ICACHE_FLASH_ATTR
 tcp_client_discon_cb(void *arg){
-	os_printf("tcp client disconnect tcp server successful\r\n");
+	LOGD("tcp client disconnect tcp server successful\r\n");
 	recv_pos = 0;
 	recv_t_len = 0;
 }
@@ -103,7 +103,7 @@ LOCAL void ICACHE_FLASH_ATTR
 tcp_client_connect_cb(void *arg){
 	struct espconn *pespconn = arg;
 
-	os_printf("tcp client connect tcp server successful\r\n");
+	LOGD("tcp client connect tcp server successful\r\n");
 	espconn_regist_recvcb(pespconn,tcp_client_recv_cb);//注册接收数据回调函数
 	espconn_regist_sentcb(pespconn,tcp_client_sent_cb);//注册数据发送完成回调函数
 	espconn_regist_disconcb(pespconn,tcp_client_discon_cb);//注册断开连接回调函数
@@ -120,7 +120,7 @@ tcp_client_init(struct espconn *espconn,uint8 *remote_ip,struct ip_addr *local_i
 
 	uint32 server_ip = ipaddr_addr(remote_ip);
 
-	os_printf("TCP client connect to tcp server\r\n");
+	LOGD("TCP client connect to tcp server\r\n");
 	espconn->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
 	espconn->type = ESPCONN_TCP;
 

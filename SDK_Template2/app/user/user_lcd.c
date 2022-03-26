@@ -1810,3 +1810,30 @@ MLCD_ShowTFTImage(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]) //invert
 
 	}
 }
+
+void ICACHE_FLASH_ATTR
+MLCD_ShowTFTImage_cp(u8 x, u8 y, u8 image_w, u8 image_h, u8 buf[]) //invert
+{
+	int i;
+	Address_set(x,y,x+image_w-1,y+image_h-1);		//×ø±êÉèÖÃ
+	int point_total = image_w * image_h;
+	u16 dat = buf[0];
+	for(i=0;i< point_total; i++)
+	{
+		//os_printf("%d: 0x%x\n", i, buf[i/8]);
+		if ((i) % 8 == 0) {
+			//os_printf("%d: 0x%x\n", i, buf[i/8]);
+			dat = buf[i/8];
+		}
+		if (dat & 0x80) {
+			//LCD_WR_DATA(POINT_COLOR);
+			LCD_WR_DATA8(POINT_COLOR);	 //·¢ËÍÑÕÉ«Êý¾Ý
+			LCD_WR_DATA8(POINT_COLOR);
+		} else {
+			//LCD_WR_DATA(BACK_COLOR);
+			LCD_WR_DATA8(BACK_COLOR);	 //·¢ËÍÑÕÉ«Êý¾Ý
+			LCD_WR_DATA8(BACK_COLOR);
+		}
+		dat <<= 1;
+	}
+}

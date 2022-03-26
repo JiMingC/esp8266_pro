@@ -14,6 +14,7 @@
 #include "driver/cJSON.h"
 #include "stdlib.h"
 #include "ets_sys.h"
+#include "typedef.h"
 //At the same time, only one can be 1
 #define TCP_CLIENT 1
 #define TCP_SERVER 0
